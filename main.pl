@@ -28,6 +28,7 @@ start :-
   /*Position for testing purposes*/
   inititem, !,
   repeat,
+    write('$-'),
     read(In),
     exec(In), nl,
   (In == exit; endgame).
