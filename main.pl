@@ -7,9 +7,26 @@
 ╚══════╝╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝╚═╝      ╚═════╝ ╚═════╝  ╚═════╝
 */
 /*Start Game*/
+:- dynamic(player_pos/2).
+:- dynamic(player_health/1).
+:- dynamic(player_armor/1).
+:- dynamic(player_ammo/1).
+:- dynamic(player_inv/1).
+:- dynamic(in_inv/1).
+:- dynamic(weapon_pos/3).
+:- dynamic(ammo_pos/3).
+:- dynamic(armor_pos/3).
+:- dynamic(med_pos/3).
+:- dynamic(deadzone_size/1).
+
+/*Deklarasi rule player*/
+
 start :-
   print_title,
   helpcmd,
+  initplayer,
+  /*Position for testing purposes*/
+  inititem, !,
   repeat,
     read(In),
     exec(In), nl,
@@ -56,24 +73,19 @@ endgame :-
   (X@=<V; Y@=<V; Vright is 11-V ,X@>=Vright; Vright is 11-V ,Y@>=Vright), !,
   write('Skidipapman kehabisan darah dan mati di deadzone'),nl.
 
+initplayer :-
+  asserta(player_pos(5,5)),
+  asserta(player_health(100)),
+  asserta(player_armor(0)),
+  asserta(player_ammo(0)),
+  asserta(player_inv(15)).
 
-/*Deklarasi rule player*/
-:- dynamic player_pos/2.
-player_pos(5,5).
-
-:- dynamic player_health/1.
-player_health(100).
-
-:- dynamic player_armor/1.
-player_armor(0).
-
-:- dynamic player_ammo/1.
-player_ammo(0).
-
-:- dynamic player_inv/1.
-player_inv(15).
-
-:- dynamic in_inv/1.
+inititem :-
+  asserta(weapon_pos(1,1,awm)),
+  asserta(ammo_pos(1,3,sniper_ammo)),
+  asserta(armor_pos(3,4,helm_spetsnaz)),
+  asserta(med_pos(3,3,med_kit)),
+  asserta(deadzone_size(0)).
 
 /*Deklarasi objek/item*/
 weapon_obj(awm).
@@ -88,9 +100,6 @@ weapon_dmg(awm,70).
 weapon_dmg(m24,30).
 weapon_dmg(akm,20).
 weapon_dmg(p18c,10).
-:- dynamic weapon_pos/3.
-/*Position for testing purposes*/
-weapon_pos(1,1,awm).
 
 ammo_obj(sniper_ammo).
 ammo_obj(smg_ammo).
@@ -101,9 +110,6 @@ ammo_type(pistol_ammo,pistol).
 ammo_count(sniper_ammo,5).
 ammo_count(smg_ammo,20).
 ammo_count(pistol_ammo,10).
-:- dynamic ammo_pos/3.
-/*Position for testing purposes*/
-ammo_pos(1,3,sniper_ammo).
 
 armor_obj(helm_spetsnaz).
 armor_obj(helm_military).
@@ -113,21 +119,13 @@ armor_amount(helm_spetsnaz,30).
 armor_amount(helm_military,15).
 armor_amount(vest_military,50).
 armor_amount(vest_police,30).
-:- dynamic armor_pos/3.
-/*Position for testing purposes*/
-armor_pos(3,4,helm_spetsnaz).
 
 med_obj(med_kit).
 med_obj(first_aid_kit).
 med_heal(med_kit,40).
 med_heal(first_aid_kit,80).
-:- dynamic med_pos/3.
-/*Position for testing purposes*/
-med_pos(3,3,med_kit).
 
 /*Deklarasi dan rule terkait map*/
-:- dynamic deadzone_size/1.
-deadzone_size(0).
 
 /*Konvensi : Peta dimulai di kiri atas pada koordinat (0,0).
              Nilai X membesar ke kanan.
