@@ -1,11 +1,4 @@
-﻿/*███████╗██╗  ██╗██╗██████╗ ██╗██████╗ ██╗   ██╗██████╗  ██████╗
-  ██╔════╝██║ ██╔╝██║██╔══██╗██║██╔══██╗██║   ██║██╔══██╗██╔════╝
-  ███████╗█████╔╝ ██║██║  ██║██║██████╔╝██║   ██║██████╔╝██║  ███╗
-  ╚════██║██╔═██╗ ██║██║  ██║██║██╔═══╝ ██║   ██║██╔══██╗██║   ██║
-  ███████║██║  ██╗██║██████╔╝██║██║     ╚██████╔╝██████╔╝╚██████╔╝
-  ╚══════╝╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝╚═╝      ╚═════╝ ╚═════╝  ╚═════╝
-*/
-/*Start Game*/
+/*Dynamic Declaration*/
 :- dynamic(player_pos/2).
 :- dynamic(player_health/1).
 :- dynamic(player_armor/1).
@@ -29,14 +22,14 @@ start :-
   print_title,
   helpcmd,
   initplayer,
-  /*Position for testing purposes*/
+  initEnemy,
   inititem,
   asserta(deadzone_timer(5)), !,
   repeat,
-    exec(tick),nl,
     write('$-'),
     read(In),
     exec(In), nl,
+    exec(tick),nl,
   (In == exit; endgame).
 
 /*Command execution alias*/
@@ -53,14 +46,14 @@ exec(_) :- write('Invalid command, kan programnya belum kelar :('), !.
 
 /*Miscelanious*/
 print_title :-
-  write('=============== WELCOME TO LAST TEAM STANDING\'S ==============='),nl,
-  write('███████╗██╗  ██╗██╗██████╗ ██╗██████╗ ██╗   ██╗██████╗  ██████╗'),nl,
-  write('██╔════╝██║ ██╔╝██║██╔══██╗██║██╔══██╗██║   ██║██╔══██╗██╔════╝'),nl,
-  write('███████╗█████╔╝ ██║██║  ██║██║██████╔╝██║   ██║██████╔╝██║  ███╗'),nl,
-  write('╚════██║██╔═██╗ ██║██║  ██║██║██╔═══╝ ██║   ██║██╔══██╗██║   ██║'),nl,
-  write('███████║██║  ██╗██║██████╔╝██║██║     ╚██████╔╝██████╔╝╚██████╔╝'),nl,
-  write('╚══════╝╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝╚═╝      ╚═════╝ ╚═════╝  ╚═════╝'),nl,
-  write('================== LOOT , SCOOP and SKIDIPAPAP ================='),nl,nl.
+  write('= WELCOME TO LAST TEAM STANDING\'S ='),nl,
+  write(' ███████╗██╗   ██╗██████╗  ██████╗ '),nl,
+  write(' ██╔════╝██║   ██║██╔══██╗██╔════╝ '),nl,
+  write(' ███████╗██║   ██║██████╔╝██║  ███╗'),nl,
+  write(' ╚════██║██║   ██║██╔══██╗██║   ██║'),nl,
+  write(' ███████║╚██████╔╝██████╔╝╚██████╔╝'),nl,
+  write(' ╚══════╝ ╚═════╝ ╚═════╝  ╚═════╝ '),nl,
+  write('=== LOOT , SCOOP and SKIDIPAPAP ==='),nl,nl.
 
 helpcmd :-
   write('Currently usable command:'),nl,
@@ -276,7 +269,8 @@ is_valid_move(_,_).
 move(X,Y) :-
   player_pos(A,B), Xmov is X+A, Ymov is Y+B, is_valid_move(Xmov,Ymov), !,
   deadzone_timer(T),
-  write(T), write(' tick to deadzone shrinking'), nl, Tnew is T-1, retract(deadzone_timer(T)), asserta(deadzone_timer(Tnew)),
+  Tnew is T-1, retract(deadzone_timer(T)), asserta(deadzone_timer(Tnew)),
+  (Tnew == 0, write('Deadzone is shrinking'), nl; write(Tnew), write(' tick to deadzone shrinking'), nl), !,
   retract(player_pos(A,B)), assertz(player_pos(Xmov,Ymov)).
 
 /*Rule untuk invalid move*/
