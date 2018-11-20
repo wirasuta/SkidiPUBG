@@ -167,7 +167,66 @@ print_pos(_,_) :- write('-').
 
 print_map(11,11) :- print_pos(11,11),nl,!.
 print_map(11,Y) :- Ynew is Y+1, print_pos(11,Y),nl,!,print_map(0,Ynew).
-print_map(X,Y) :- Xnew is X+1, print_pos(X,Y),!,print_map(Xnew,Y).
+print_map(X,Y) :-
+  deadzone_size(V),
+  (X@=<V; Y@=<V; Vright is 11-V ,X@>=Vright; Vright is 11-V ,Y@>=Vright), !,
+  write('X'),
+  Xnew is X+1, print_map(Xnew,Y).
+print_map(A,B) :-
+  player_pos(X,Y),
+  Xmin is X-1, Xplus is X+1, Ymin is Y-1, Yplus is Y+1,
+  A == Xmin, B == Ymin,
+  print_pos(Xmin,Ymin), !,
+  Anew is A+1, print_map(Anew,B).
+print_map(A,B) :-
+  player_pos(X,Y),
+  Xmin is X-1, Xplus is X+1, Ymin is Y-1, Yplus is Y+1,
+  A == X, B == Ymin,
+  print_pos(X,Ymin), !,
+  Anew is A+1, print_map(Anew,B).
+print_map(A,B) :-
+  player_pos(X,Y),
+  Xmin is X-1, Xplus is X+1, Ymin is Y-1, Yplus is Y+1,
+  A == Xplus, B == Ymin,
+  print_pos(Xplus,Ymin), !,
+  Anew is A+1, print_map(Anew,B).
+print_map(A,B) :-
+  player_pos(X,Y),
+  Xmin is X-1, Xplus is X+1, Ymin is Y-1, Yplus is Y+1,
+  A == Xmin, B == Y,
+  print_pos(Xmin,Y), !,
+  Anew is A+1, print_map(Anew,B).
+print_map(A,B) :-
+  player_pos(X,Y),
+  Xmin is X-1, Xplus is X+1, Ymin is Y-1, Yplus is Y+1,
+  A == X, B == Y,
+  print_pos(X,Y), !,
+  Anew is A+1, print_map(Anew,B).
+print_map(A,B) :-
+  player_pos(X,Y),
+  Xmin is X-1, Xplus is X+1, Ymin is Y-1, Yplus is Y+1,
+  A == Xplus, B == Y,
+  print_pos(Xplus,Y), !,
+  Anew is A+1, print_map(Anew,B).
+print_map(A,B) :-
+  player_pos(X,Y),
+  Xmin is X-1, Xplus is X+1, Ymin is Y-1, Yplus is Y+1,
+  A == Xmin, B == Yplus,
+  print_pos(Xmin,Yplus), !,
+  Anew is A+1, print_map(Anew,B).
+print_map(A,B) :-
+  player_pos(X,Y),
+  Xmin is X-1, Xplus is X+1, Ymin is Y-1, Yplus is Y+1,
+  A == X, B == Yplus,
+  print_pos(X,Yplus), !,
+  Anew is A+1, print_map(Anew,B).
+print_map(A,B) :-
+  player_pos(X,Y),
+  Xmin is X-1, Xplus is X+1, Ymin is Y-1, Yplus is Y+1,
+  A == Xplus, B == Yplus,
+  print_pos(Xplus,Yplus), !,
+  Anew is A+1, print_map(Anew,B).
+print_map(X,Y) :- Xnew is X+1, write('-'),!,print_map(Xnew,Y).
 
 deadzone_tick :- deadzone_size(X), Xnew is X+1, retract(deadzone_size(X)), assertz(deadzone_size(Xnew)).
 
