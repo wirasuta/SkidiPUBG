@@ -18,6 +18,7 @@
 :- dynamic(armor_pos/3).
 :- dynamic(med_pos/3).
 :- dynamic(deadzone_size/1).
+:- dynamic(deadzone_timer/1).
 
 /*Deklarasi rule player*/
 
@@ -26,8 +27,10 @@ start :-
   helpcmd,
   initplayer,
   /*Position for testing purposes*/
-  inititem, !,
+  inititem,
+  asserta(deadzone_timer(5)), !,
   repeat,
+    exec(tick),nl,
     write('$-'),
     read(In),
     exec(In), nl,
@@ -36,7 +39,7 @@ start :-
 /*Command execution alias*/
 exec(map) :- map, !.
 exec(look) :- look, !.
-exec(tick) :- deadzone_tick, !.
+exec(tick) :- !, deadzone_tick.
 exec(n) :- move(0,-1), !.
 exec(e) :- move(1,0), !.
 exec(s) :- move(0,1), !.
@@ -228,7 +231,12 @@ print_map(A,B) :-
   Anew is A+1, print_map(Anew,B).
 print_map(X,Y) :- Xnew is X+1, write('-'),!,print_map(Xnew,Y).
 
-deadzone_tick :- deadzone_size(X), Xnew is X+1, retract(deadzone_size(X)), assertz(deadzone_size(Xnew)).
+deadzone_tick :-
+  deadzone_timer(T), T == 0, !,
+  retract(deadzone_timer(T)), asserta(deadzone_timer(6)),
+  deadzone_size(X), Xnew is X+1, retract(deadzone_size(X)), assertz(deadzone_size(Xnew)).
+
+deadzone_tick :- !.
 
 map :-
   write('You are in pochinki'),nl,
@@ -259,6 +267,9 @@ is_valid_move(_,_).
 
 move(X,Y) :-
   player_pos(A,B), Xmov is X+A, Ymov is Y+B, is_valid_move(Xmov,Ymov), !,
+  deadzone_timer(T), 
+  write(T), write(' tick to deadzone shrinking'), nl, Tnew is T-1, retract(deadzone_timer(T)), asserta(deadzone_timer(Tnew)),
   retract(player_pos(A,B)), assertz(player_pos(Xmov,Ymov)).
+
 /*Rule untuk invalid move*/
 move(_,_) :- write('You cannot go into the deadzone, dumbass'),nl.
