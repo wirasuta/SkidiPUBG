@@ -1,15 +1,15 @@
-/*
-███████╗██╗  ██╗██╗██████╗ ██╗██████╗ ██╗   ██╗██████╗  ██████╗
-██╔════╝██║ ██╔╝██║██╔══██╗██║██╔══██╗██║   ██║██╔══██╗██╔════╝
-███████╗█████╔╝ ██║██║  ██║██║██████╔╝██║   ██║██████╔╝██║  ███╗
-╚════██║██╔═██╗ ██║██║  ██║██║██╔═══╝ ██║   ██║██╔══██╗██║   ██║
-███████║██║  ██╗██║██████╔╝██║██║     ╚██████╔╝██████╔╝╚██████╔╝
-╚══════╝╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝╚═╝      ╚═════╝ ╚═════╝  ╚═════╝
+﻿/*███████╗██╗  ██╗██╗██████╗ ██╗██████╗ ██╗   ██╗██████╗  ██████╗
+  ██╔════╝██║ ██╔╝██║██╔══██╗██║██╔══██╗██║   ██║██╔══██╗██╔════╝
+  ███████╗█████╔╝ ██║██║  ██║██║██████╔╝██║   ██║██████╔╝██║  ███╗
+  ╚════██║██╔═██╗ ██║██║  ██║██║██╔═══╝ ██║   ██║██╔══██╗██║   ██║
+  ███████║██║  ██╗██║██████╔╝██║██║     ╚██████╔╝██████╔╝╚██████╔╝
+  ╚══════╝╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝╚═╝      ╚═════╝ ╚═════╝  ╚═════╝
 */
 /*Start Game*/
 :- dynamic(player_pos/2).
 :- dynamic(player_health/1).
 :- dynamic(player_armor/1).
+:- dynamic(player_weapon/1).
 :- dynamic(player_ammo/1).
 :- dynamic(player_inv/1).
 :- dynamic(in_inv/1).
@@ -19,6 +19,9 @@
 :- dynamic(med_pos/3).
 :- dynamic(deadzone_size/1).
 :- dynamic(deadzone_timer/1).
+:- dynamic(enemy_pos/3).
+:- dynamic(enemy_weapon/2).
+:- dynamic(enemy_health/2).
 
 /*Deklarasi rule player*/
 
@@ -56,7 +59,8 @@ print_title :-
   write('███████╗█████╔╝ ██║██║  ██║██║██████╔╝██║   ██║██████╔╝██║  ███╗'),nl,
   write('╚════██║██╔═██╗ ██║██║  ██║██║██╔═══╝ ██║   ██║██╔══██╗██║   ██║'),nl,
   write('███████║██║  ██╗██║██████╔╝██║██║     ╚██████╔╝██████╔╝╚██████╔╝'),nl,
-  write('╚══════╝╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝╚═╝      ╚═════╝ ╚═════╝  ╚═════╝'),nl,nl.
+  write('╚══════╝╚═╝  ╚═╝╚═╝╚═════╝ ╚═╝╚═╝      ╚═════╝ ╚═════╝  ╚═════╝'),nl,
+  write('================== LOOT , SCOOP and SKIDIPAPAP ================='),nl,nl.
 
 helpcmd :-
   write('Currently usable command:'),nl,
@@ -139,7 +143,11 @@ print_pos(X,Y) :-
   deadzone_size(V),
   (X@=<V; Y@=<V; Vright is 11-V ,X@>=Vright; Vright is 11-V ,Y@>=Vright), !,
   write('X').
-/*TODO : Enemy placement*/
+/*Enemy*/
+print_pos(X,Y) :-
+  enemy_pos(_,A,B),
+  A==X, B==Y, !,
+  write('E').
 /*Medicine*/
 print_pos(X,Y) :-
   med_pos(A,B,_),
@@ -267,9 +275,24 @@ is_valid_move(_,_).
 
 move(X,Y) :-
   player_pos(A,B), Xmov is X+A, Ymov is Y+B, is_valid_move(Xmov,Ymov), !,
-  deadzone_timer(T), 
+  deadzone_timer(T),
   write(T), write(' tick to deadzone shrinking'), nl, Tnew is T-1, retract(deadzone_timer(T)), asserta(deadzone_timer(Tnew)),
   retract(player_pos(A,B)), assertz(player_pos(Xmov,Ymov)).
 
 /*Rule untuk invalid move*/
 move(_,_) :- write('You cannot go into the deadzone, dumbass'),nl.
+
+/* Enemy */
+enemyList([asrap,bari,badur,jeremy,rojap,abiyyu,suhailie,joshua,cici,pandyaka]).
+initEnemy:-
+  enemyList(L),
+  initEnemyPos(L).
+
+initEnemyPos([H|T]):-
+  randomize,
+  random(1,10,PosX),
+  random(1,10,PosY),
+  assertz(enemy_pos(H,PosX,PosY)),
+  initEnemyPos(T).
+
+initEnemyPos([]).
