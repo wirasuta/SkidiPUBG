@@ -1,4 +1,4 @@
-/*Dynamic Declaration*/
+﻿/*Dynamic Declaration*/
 :- dynamic(player_pos/2).
 :- dynamic(player_health/1).
 :- dynamic(player_armor/1).
@@ -46,14 +46,14 @@ exec(_) :- write('Invalid command, kan programnya belum kelar :('), !.
 
 /*Miscelanious*/
 print_title :-
-  write('= WELCOME TO LAST TEAM STANDING\'S ='),nl,
-  write(' ███████╗██╗   ██╗██████╗  ██████╗ '),nl,
-  write(' ██╔════╝██║   ██║██╔══██╗██╔════╝ '),nl,
-  write(' ███████╗██║   ██║██████╔╝██║  ███╗'),nl,
-  write(' ╚════██║██║   ██║██╔══██╗██║   ██║'),nl,
-  write(' ███████║╚██████╔╝██████╔╝╚██████╔╝'),nl,
-  write(' ╚══════╝ ╚═════╝ ╚═════╝  ╚═════╝ '),nl,
-  write('=== LOOT , SCOOP and SKIDIPAPAP ==='),nl,nl.
+  write('= WELCOME TO SKIDIPAPAP UNKNOWN BATTLEGROUND ='),nl,
+  write('      ███████╗██╗   ██╗██████╗  ██████╗ '),nl,
+  write('      ██╔════╝██║   ██║██╔══██╗██╔════╝ '),nl,
+  write('      ███████╗██║   ██║██████╔╝██║  ███╗'),nl,
+  write('      ╚════██║██║   ██║██╔══██╗██║   ██║'),nl,
+  write('      ███████║╚██████╔╝██████╔╝╚██████╔╝'),nl,
+  write('      ╚══════╝ ╚═════╝ ╚═════╝  ╚═════╝ '),nl,
+  write('======== LOOT , SCOOP and SKIDIPAPAP ========'),nl,nl.
 
 helpcmd :-
   write('Currently usable command:'),nl,
@@ -93,24 +93,32 @@ weapon_obj(awm).
 weapon_obj(m24).
 weapon_obj(akm).
 weapon_obj(p18c).
+weapon_obj(m1997).
 weapon_type(awm,sniper).
 weapon_type(m24,smg).
-weapon_type(akm,smg).
+weapon_type(akm,ar).
+weapon_type(m1997,sg).
 weapon_type(p18c,pistol).
 weapon_dmg(awm,70).
-weapon_dmg(m24,30).
-weapon_dmg(akm,20).
+weapon_dmg(m24,25).
+weapon_dmg(akm,35).
 weapon_dmg(p18c,10).
+weapon_dmg(m1997,60).
 
 ammo_obj(sniper_ammo).
 ammo_obj(smg_ammo).
+ammo_obj(ar_ammo).
 ammo_obj(pistol_ammo).
 ammo_type(sniper_ammo,sniper).
 ammo_type(smg_ammo,smg).
+ammo_type(ar_ammo,ar).
+ammo_type(sg_ammo,sg).
 ammo_type(pistol_ammo,pistol).
 ammo_count(sniper_ammo,5).
-ammo_count(smg_ammo,20).
-ammo_count(pistol_ammo,10).
+ammo_count(smg_ammo,30).
+ammo_count(pistol_ammo,40).
+ammo_count(ar_ammo,20).
+ammo_count(sg_ammo,10).
 
 armor_obj(helm_spetsnaz).
 armor_obj(helm_military).
@@ -121,9 +129,11 @@ armor_amount(helm_military,15).
 armor_amount(vest_military,50).
 armor_amount(vest_police,30).
 
+med_obj(bandages).
 med_obj(med_kit).
 med_obj(first_aid_kit).
-med_heal(med_kit,40).
+med_heal(bandages,30).
+med_heal(med_kit,50).
 med_heal(first_aid_kit,80).
 
 /*Deklarasi dan rule terkait map*/
@@ -290,3 +300,16 @@ initEnemyPos([H|T]):-
   initEnemyPos(T).
 
 initEnemyPos([]).
+
+enemy_weapon(asrap,awm).
+enemy_weapon(bari,p18c).
+enemy_weapon(badur,m24).
+enemy_weapon(jeremy,p18c).
+enemy_weapon(rojap,akm).
+enemy_weapon(abiyyu,m1997).
+enemy_weapon(suhailie,akm).
+enemy_weapon(joshua,awm).
+enemy_weapon(cici,m1997).
+enemy_weapon(pandyaka,p18c).
+
+
