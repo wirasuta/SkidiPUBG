@@ -15,27 +15,29 @@
 :- dynamic(enemy_pos/3).
 :- dynamic(enemy_weapon/2).
 :- dynamic(enemy_health/2).
+:- dynamic(enemyList/1).
 
 /*Deklarasi rule player*/
 
 start :-
   print_title,
   helpcmd,
-  initplayer,
+  initPlayer,
   initEnemy,
-  inititem,
+  initItem,
   asserta(deadzone_timer(5)), !,
   repeat,
     write('$-'),
     read(In),
     exec(In), nl,
     exec(tick),nl,
-  (In == exit; endgame).
+  (In == exit; endGame).
 
 /*Command execution alias*/
 exec(map) :- map, !.
 exec(look) :- look, !.
 exec(tick) :- !, deadzone_tick.
+exec(att) :- attack, !.
 exec(n) :- move(0,-1), !.
 exec(e) :- move(1,0), !.
 exec(s) :- move(0,1), !.
@@ -60,6 +62,7 @@ helpcmd :-
   write('  $- map  : print the whole map'),nl,
   write('  $- look : look around'),nl,
   write('  $- tick : shrink the deadzone'),nl,
+  write('  $- att  : attack enemy in the same grid'),nl,
   write('  $- n    : move north'),nl,
   write('  $- e    : move east'),nl,
   write('  $- s    : move south'),nl,
@@ -68,20 +71,26 @@ helpcmd :-
   write('  $- exit : exit the game'),nl.
 
 /*Endgame Conditions*/
-endgame :-
+endGame :-
   player_pos(X,Y),
   deadzone_size(V),
   (X@=<V; Y@=<V; Vright is 11-V ,X@>=Vright; Vright is 11-V ,Y@>=Vright), !,
   write('Skidipapman kehabisan darah dan mati di deadzone'),nl.
 
-initplayer :-
+endGame :-
+  player_health(X),
+  X@=<0, !,
+  write('Skidipapman mati karena luka peperangan'),nl.
+
+initPlayer :-
   asserta(player_pos(5,5)),
   asserta(player_health(100)),
   asserta(player_armor(0)),
-  asserta(player_ammo(0)),
-  asserta(player_inv(15)).
+  asserta(player_ammo(5)),
+  asserta(player_inv(15)),
+  asserta(player_weapon(awm)).
 
-inititem :-
+initItem :-
   asserta(weapon_pos(1,1,awm)),
   asserta(ammo_pos(1,3,sniper_ammo)),
   asserta(armor_pos(3,4,helm_spetsnaz)),
@@ -287,8 +296,8 @@ move(X,Y) :-
 move(_,_) :- write('You cannot go into the deadzone, dumbass'),nl.
 
 /* Enemy */
-enemyList([asrap,bari,badur,jeremy,rojap,abiyyu,suhailie,joshua,cici,pandyaka]).
 initEnemy :-
+  asserta(enemyList([asrap,bari,badur,jeremy,rojap,abiyyu,suhailie,joshua,cici,pandyaka])),
   enemyList(L),
   initEnemyPos(L),
   initEnemyWeapon.
@@ -298,6 +307,7 @@ initEnemyPos([H|T]):-
   random(1,10,PosX),
   random(1,10,PosY),
   assertz(enemy_pos(H,PosX,PosY)),
+  assertz(enemy_health(H,100)),
   initEnemyPos(T).
 
 initEnemyPos([]).
@@ -313,3 +323,51 @@ initEnemyWeapon :-
   assertz(enemy_weapon(joshua,awm)),
   assertz(enemy_weapon(cici,m1997)),
   assertz(enemy_weapon(pandyaka,p18c)).
+
+enemyTick :-
+  enemyList(L),
+  checkDeath(L).
+
+checkDeath([H|T]):-
+  enemy_health(H,CurrHt),
+  CurrHt@>=0, !,
+  checkDeath(T).
+
+checkDeath([H|T]):-
+  enemyList(L),
+  enemy_health(H,CurrHt),
+  CurrHt@=<0, !,
+  enemy_pos(H,X,Y),
+  delete(L, H, Lnew),
+  retract(enemyList(L)), asserta(enemyList(Lnew)),
+  retract(enemy_pos(H,X,Y)),
+  retract(enemy_weapon(H,W)),
+  retract(enemy_health(H,CurrHt)),
+  assertz(weapon_pos(X,Y,W)), !,
+  checkDeath(T).
+
+checkDeath([]).
+
+/* Combat mechanic */
+attack :-
+  player_pos(X,Y),
+  enemy_pos(H,A,B),
+  X==A, Y==B,
+  player_weapon(V), player_ammo(N),
+  V\==none, N@>0,
+  enemy_health(H,Ht), weapon_dmg(V,Dmg),
+  Htnew is Ht-Dmg, Htnew@>0, !,
+  retract(enemy_health(H,Ht)), asserta(enemy_health(H,Htnew)),
+  write('You attacked '),write(H),write(', Remaining HP:'),write(Htnew),!.
+
+  attack :-
+    player_pos(X,Y),
+    enemy_pos(H,A,B),
+    X==A, Y==B, !,
+    player_weapon(V), player_ammo(N),
+    V\==none, N@>0, !,
+    enemy_health(H,Ht), weapon_dmg(V,Dmg),
+    Htnew is Ht-Dmg, Htnew@=<0, !,
+    retract(enemy_health(H,Ht)), asserta(enemy_health(H,Htnew)),
+    enemyTick,
+    write('You killed '),write(H),!.
