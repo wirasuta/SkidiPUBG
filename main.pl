@@ -288,9 +288,10 @@ move(_,_) :- write('You cannot go into the deadzone, dumbass'),nl.
 
 /* Enemy */
 enemyList([asrap,bari,badur,jeremy,rojap,abiyyu,suhailie,joshua,cici,pandyaka]).
-initEnemy:-
+initEnemy :-
   enemyList(L),
-  initEnemyPos(L).
+  initEnemyPos(L),
+  initEnemyWeapon.
 
 initEnemyPos([H|T]):-
   randomize,
@@ -301,13 +302,14 @@ initEnemyPos([H|T]):-
 
 initEnemyPos([]).
 
-enemy_weapon(asrap,awm).
-enemy_weapon(bari,p18c).
-enemy_weapon(badur,m24).
-enemy_weapon(jeremy,p18c).
-enemy_weapon(rojap,akm).
-enemy_weapon(abiyyu,m1997).
-enemy_weapon(suhailie,akm).
-enemy_weapon(joshua,awm).
-enemy_weapon(cici,m1997).
-enemy_weapon(pandyaka,p18c).
+initEnemyWeapon :-
+  assertz(enemy_weapon(asrap,awm)),
+  assertz(enemy_weapon(bari,p18c)),
+  assertz(enemy_weapon(badur,m24)),
+  assertz(enemy_weapon(jeremy,p18c)),
+  assertz(enemy_weapon(rojap,akm)),
+  assertz(enemy_weapon(abiyyu,m1997)),
+  assertz(enemy_weapon(suhailie,akm)),
+  assertz(enemy_weapon(joshua,awm)),
+  assertz(enemy_weapon(cici,m1997)),
+  assertz(enemy_weapon(pandyaka,p18c)).
