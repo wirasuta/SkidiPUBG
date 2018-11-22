@@ -360,14 +360,14 @@ attack :-
   retract(enemy_health(H,Ht)), asserta(enemy_health(H,Htnew)),
   write('You attacked '),write(H),write(', Remaining HP:'),write(Htnew),!.
 
-  attack :-
-    player_pos(X,Y),
-    enemy_pos(H,A,B),
-    X==A, Y==B, !,
-    player_weapon(V), player_ammo(N),
-    V\==none, N@>0, !,
-    enemy_health(H,Ht), weapon_dmg(V,Dmg),
-    Htnew is Ht-Dmg, Htnew@=<0, !,
-    retract(enemy_health(H,Ht)), asserta(enemy_health(H,Htnew)),
-    enemyTick,
-    write('You killed '),write(H),!.
+attack :-
+  player_pos(X,Y),
+  enemy_pos(H,A,B),
+  X==A, Y==B, !,
+  player_weapon(V), player_ammo(N),
+  V\==none, N@>0, !,
+  enemy_health(H,Ht), weapon_dmg(V,Dmg),
+  Htnew is Ht-Dmg, Htnew@=<0, !,
+  retract(enemy_health(H,Ht)), asserta(enemy_health(H,Htnew)),
+  enemyTick,
+  write('You killed '),write(H),!.
