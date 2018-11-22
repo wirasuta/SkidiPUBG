@@ -1,4 +1,4 @@
-﻿/*Dynamic Declaration*/
+/*Dynamic Declaration*/
 :- dynamic(player_pos/2).
 :- dynamic(player_health/1).
 :- dynamic(player_armor/1).
@@ -311,5 +311,3 @@ enemy_weapon(suhailie,akm).
 enemy_weapon(joshua,awm).
 enemy_weapon(cici,m1997).
 enemy_weapon(pandyaka,p18c).
-
-
