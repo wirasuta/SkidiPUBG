@@ -38,13 +38,15 @@ exec(map) :- map, !.
 exec(look) :- look, !.
 exec(att) :- attack, enemy_attack,!.
 exec(stat) :- status,!.
+exec(trace) :- trace, !.
+exec(notrace) :- notrace, !.
 exec(n) :- move(0,-1),enemyList(L), enemyMove(L), !.
 exec(e) :- move(1,0), enemyList(L), enemyMove(L), !.
 exec(s) :- move(0,1), enemyList(L), enemyMove(L), !.
 exec(w) :- move(-1,0),enemyList(L), enemyMove(L), !.
 exec(help) :- helpcmd, !.
 exec(exit) :- write('Yah kok udahan :('),!.
-exec(_) :- write('Invalid command, kan programnya belum kelar :('), !.
+exec(_) :- write('Invalid command, kan programnya belum kelar :('), nl, !.
 
 /*Miscelanious*/
 print_title :-
@@ -289,7 +291,7 @@ look :-
   Xmin is X-1, Xplus is X+1, Ymin is Y-1, Yplus is Y+1,
   write(' '),print_pos(Xmin,Ymin), print_pos(X,Ymin), print_pos(Xplus,Ymin), nl,
   write(' '),print_pos(Xmin,Y), print_pos(X,Y), print_pos(Xplus,Y), nl,
-  write(' '),print_pos(Xmin,Yplus), print_pos(X,Yplus), print_pos(Xplus,Yplus).
+  write(' '),print_pos(Xmin,Yplus), print_pos(X,Yplus), print_pos(Xplus,Yplus),nl.
 
 /*Deklarasi dan rule terkait movement player*/
 is_valid_move(X,_) :- deadzone_size(V), X@=<V, !, fail.
@@ -357,14 +359,14 @@ enemyTick :-
   checkDeath(L).
 
 checkDeath([H|T]):-
-  enemy_health(H,CurrHt),
-  CurrHt@>=0, !,
+  enemy_health(H,CurrHt), enemy_pos(H,X,Y), deadzone_size(V),
+  CurrHt@>=0, X@>V, Y@>V, Vright is 11-V ,X@<Vright, Y@<Vright, !,
   checkDeath(T).
 
 checkDeath([H|T]):-
   enemyList(L),
   enemy_health(H,CurrHt), enemy_pos(H,X,Y), deadzone_size(V), !,
-  (CurrHt@=<0 ; (X@=<V; Y@=<V; Vright is 11-V ,X@>=Vright; Vright is 11-V ,Y@>=Vright)),
+  (CurrHt@=<0; X@=<V; Y@=<V; Vright is 11-V ,X@>=Vright; Vright is 11-V ,Y@>=Vright),
   delete(L, H, Lnew),
   retract(enemyList(L)), asserta(enemyList(Lnew)),
   retract(enemy_pos(H,X,Y)),
@@ -391,7 +393,7 @@ attack :-
 attack :-
   player_pos(X,Y),
   enemy_pos(H,A,B),
-  X==A, Y==B, !,
+  X==A, Y==B,
   player_weapon(V), player_ammo(N),
   V\==none, N@>0, !,
   enemy_health(H,Ht), weapon_dmg(V,Dmg),
@@ -403,7 +405,7 @@ attack :-
 
 attack :-
   player_pos(X,Y),
-  enemy_pos(H,A,B),
+  enemy_pos(_,A,B),
   X==A, Y==B, !,
   player_weapon(V), player_ammo(N),
   V\==none, N==0, !,
@@ -411,7 +413,7 @@ attack :-
 
 attack :-
   player_pos(X,Y),
-  enemy_pos(H,A,B),
+  enemy_pos(_,A,B),
   X==A, Y==B, !,
   player_weapon(V),
   V==none, !,
