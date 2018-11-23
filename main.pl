@@ -36,10 +36,10 @@ exec(map) :- map, !.
 exec(look) :- look, !.
 exec(att) :- attack, enemy_attack,!.
 exec(stat) :- status,!.
-exec(n) :- move(0,-1), !.
-exec(e) :- move(1,0), !.
-exec(s) :- move(0,1), !.
-exec(w) :- move(-1,0), !.
+exec(n) :- move(0,-1),enemyList(L), enemyMove(L), !.
+exec(e) :- move(1,0), enemyList(L), enemyMove(L), !.
+exec(s) :- move(0,1), enemyList(L), enemyMove(L), !.
+exec(w) :- move(-1,0),enemyList(L), enemyMove(L), !.
 exec(help) :- helpcmd, !.
 exec(exit) :- write('Yah kok udahan :('),!.
 exec(_) :- write('Invalid command, kan programnya belum kelar :('), !.
@@ -330,6 +330,20 @@ initEnemyWeapon :-
   assertz(enemy_weapon(joshua,awm)),
   assertz(enemy_weapon(cici,m1997)),
   assertz(enemy_weapon(pandyaka,p18c)).
+
+/*Gerak musuh*/
+enemyMove([H|T]) :-
+  randomize,
+  random(1,4,MovDir),
+  enemy_pos(H,X,Y),
+  (
+    (MovDir==1, Xnew is X+1, retract(enemy_pos(H,X,Y)), assertz(enemy_pos(H,Xnew,Y)));
+    (MovDir==2, Xnew is X-1, retract(enemy_pos(H,X,Y)), assertz(enemy_pos(H,Xnew,Y)));
+    (MovDir==3, Ynew is Y+1, retract(enemy_pos(H,X,Y)), assertz(enemy_pos(H,X,Ynew)));
+    (MovDir==4, Ynew is Y-1, retract(enemy_pos(H,X,Y)), assertz(enemy_pos(H,X,Ynew)))
+  ),!,enemyMove(T).
+
+enemyMove([]).
 
 /*Cek kematian musuh*/
 enemyTick :-
