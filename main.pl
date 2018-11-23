@@ -37,7 +37,7 @@ start :-
 exec(map) :- map, !.
 exec(look) :- look, !.
 exec(tick) :- !, deadzone_tick.
-exec(att) :- attack, !.
+exec(att) :- attack, reduce_health,!.
 exec(n) :- move(0,-1), !.
 exec(e) :- move(1,0), !.
 exec(s) :- move(0,1), !.
@@ -79,7 +79,7 @@ endGame :-
 
 endGame :-
   player_health(X),
-  X@=<0, !,
+  X==0, !,
   write('Skidipapman mati karena luka peperangan'),nl.
 
 initPlayer :-
@@ -358,7 +358,7 @@ attack :-
   enemy_health(H,Ht), weapon_dmg(V,Dmg),
   Htnew is Ht-Dmg, Htnew@>0, !,
   retract(enemy_health(H,Ht)), asserta(enemy_health(H,Htnew)),
-  write('You attacked '),write(H),write(', Remaining HP:'),write(Htnew),!.
+  write('You attacked '),write(H),write(', Remaining HP:'),write(Htnew), nl,!.
 
 attack :-
   player_pos(X,Y),
@@ -370,4 +370,25 @@ attack :-
   Htnew is Ht-Dmg, Htnew@=<0, !,
   retract(enemy_health(H,Ht)), asserta(enemy_health(H,Htnew)),
   enemyTick,
-  write('You killed '),write(H),!.
+  write('You killed '),write(H), nl,!.
+  
+reduce_health :-
+  player_pos(X,Y),
+  enemy_pos(H,A,B),
+  X==A, Y==B, !,
+  enemy_weapon(H,W), weapon_dmg(W,Dmg),
+  player_health(Ht), player_armor(Arm),!,
+  (Arm@>0, (NewArm is Arm-Dmg, !, 
+           (NewArm@>=0, retract(player_armor(Arm)), asserta(player_armor(NewArm)),
+           write('Your current armor: '),write(NewArm));
+           (NewArm@<0, retract(player_armor(Arm)), asserta(player_armor(0)), 
+           Htnew is Ht+NewArm, retract(player_health(Ht)), asserta(player_health(Htnew)),
+           write('Your current health: '),write(Htnew))),!,
+  Arm==0, (Htnew is Ht-Dmg, !, 
+          (Htnew@>0, retract(player_health(Ht)), asserta(player_health(Htnew)),
+          write('Your current health: '),write(Htnew));
+          (Htnew@=<0, retract(player_health(Ht)), asserta(player_health(0))))),nl,!.
+  
+  
+
+
