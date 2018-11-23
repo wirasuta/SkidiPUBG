@@ -28,7 +28,9 @@ start :-
   repeat,
     write('$-'),
     read(In),
-    exec(In), nl,
+    exec(In),
+    deadzone_tick,
+    enemyTick, nl,
   (In == exit; endGame).
 
 /*Command execution alias*/
@@ -79,6 +81,10 @@ endGame :-
   player_health(X),
   X==0, !,
   write('Skidipapman mati karena luka peperangan'),nl.
+
+endGame :-
+  enemyList([]), !,
+  write('Selamat Skidipapman berhasil bertahan hidup'),nl.
 
 /*Game initialization*/
 initPlayer :-
@@ -357,9 +363,8 @@ checkDeath([H|T]):-
 
 checkDeath([H|T]):-
   enemyList(L),
-  enemy_health(H,CurrHt),
-  CurrHt@=<0, !,
-  enemy_pos(H,X,Y),
+  enemy_health(H,CurrHt), enemy_pos(H,X,Y), deadzone_size(V), !,
+  (CurrHt@=<0 ; (X@=<V; Y@=<V; Vright is 11-V ,X@>=Vright; Vright is 11-V ,Y@>=Vright)),
   delete(L, H, Lnew),
   retract(enemyList(L)), asserta(enemyList(Lnew)),
   retract(enemy_pos(H,X,Y)),
