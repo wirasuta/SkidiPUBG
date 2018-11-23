@@ -18,7 +18,6 @@
 :- dynamic(enemyList/1).
 
 /*Deklarasi rule player*/
-
 start :-
   print_title,
   helpcmd,
@@ -30,14 +29,13 @@ start :-
     write('$-'),
     read(In),
     exec(In), nl,
-    exec(tick),nl,
   (In == exit; endGame).
 
 /*Command execution alias*/
 exec(map) :- map, !.
 exec(look) :- look, !.
-exec(tick) :- !, deadzone_tick.
-exec(att) :- attack, reduce_health,!.
+exec(att) :- attack, enemy_attack,!.
+exec(stat) :- status,!.
 exec(n) :- move(0,-1), !.
 exec(e) :- move(1,0), !.
 exec(s) :- move(0,1), !.
@@ -61,8 +59,8 @@ helpcmd :-
   write('Currently usable command:'),nl,
   write('  $- map  : print the whole map'),nl,
   write('  $- look : look around'),nl,
-  write('  $- tick : shrink the deadzone'),nl,
   write('  $- att  : attack enemy in the same grid'),nl,
+  write('  $- stat : show current status'),nl,
   write('  $- n    : move north'),nl,
   write('  $- e    : move east'),nl,
   write('  $- s    : move south'),nl,
@@ -82,6 +80,7 @@ endGame :-
   X==0, !,
   write('Skidipapman mati karena luka peperangan'),nl.
 
+/*Game initialization*/
 initPlayer :-
   asserta(player_pos(5,5)),
   asserta(player_health(100)),
@@ -144,6 +143,14 @@ med_obj(first_aid_kit).
 med_heal(bandages,30).
 med_heal(med_kit,50).
 med_heal(first_aid_kit,80).
+
+/*Player status*/
+status :-
+  player_health(H), player_armor(Ar), player_weapon(W), player_ammo(Am), weapon_dmg(W,Dmg),
+  write('Health : '), write(H), nl,
+  write('Armor  : '), write(Ar), nl,
+  write('Equipped Weapon : '), write(W), write(' ('), write(Dmg) , write(')'), nl,
+  write('Ammo   : '), write(Am),nl, !.
 
 /*Deklarasi dan rule terkait map*/
 
@@ -324,6 +331,7 @@ initEnemyWeapon :-
   assertz(enemy_weapon(cici,m1997)),
   assertz(enemy_weapon(pandyaka,p18c)).
 
+/*Cek kematian musuh*/
 enemyTick :-
   enemyList(L),
   checkDeath(L).
@@ -358,6 +366,7 @@ attack :-
   enemy_health(H,Ht), weapon_dmg(V,Dmg),
   Htnew is Ht-Dmg, Htnew@>0, !,
   retract(enemy_health(H,Ht)), asserta(enemy_health(H,Htnew)),
+  Nnew is N-1, retract(player_ammo(N)), asserta(player_ammo(Nnew)),
   write('You attacked '),write(H),write(', Remaining HP:'),write(Htnew), nl,!.
 
 attack :-
@@ -369,26 +378,44 @@ attack :-
   enemy_health(H,Ht), weapon_dmg(V,Dmg),
   Htnew is Ht-Dmg, Htnew@=<0, !,
   retract(enemy_health(H,Ht)), asserta(enemy_health(H,Htnew)),
+  Nnew is N-1, retract(player_ammo(N)), asserta(player_ammo(Nnew)),
   enemyTick,
   write('You killed '),write(H), nl,!.
-  
-reduce_health :-
+
+attack :-
+  player_pos(X,Y),
+  enemy_pos(H,A,B),
+  X==A, Y==B, !,
+  player_weapon(V), player_ammo(N),
+  V\==none, N==0, !,
+  write('You have no ammo'), nl,!.
+
+attack :-
+  player_pos(X,Y),
+  enemy_pos(H,A,B),
+  X==A, Y==B, !,
+  player_weapon(V),
+  V==none, !,
+  write('You have no weapon'), nl,!.
+
+attack :-
+  write('There is no one to attack'), nl,!.
+
+enemy_attack :-
   player_pos(X,Y),
   enemy_pos(H,A,B),
   X==A, Y==B, !,
   enemy_weapon(H,W), weapon_dmg(W,Dmg),
   player_health(Ht), player_armor(Arm),!,
-  (Arm@>0, (NewArm is Arm-Dmg, !, 
+  (Arm@>0, (NewArm is Arm-Dmg, !,
            (NewArm@>=0, retract(player_armor(Arm)), asserta(player_armor(NewArm)),
            write('Your current armor: '),write(NewArm));
-           (NewArm@<0, retract(player_armor(Arm)), asserta(player_armor(0)), 
+           (NewArm@<0, retract(player_armor(Arm)), asserta(player_armor(0)),
            Htnew is Ht+NewArm, retract(player_health(Ht)), asserta(player_health(Htnew)),
-           write('Your current health: '),write(Htnew))),!,
-  Arm==0, (Htnew is Ht-Dmg, !, 
+           write('Your current health: '),write(Htnew)));
+  Arm==0, (Htnew is Ht-Dmg, !,
           (Htnew@>0, retract(player_health(Ht)), asserta(player_health(Htnew)),
           write('Your current health: '),write(Htnew));
           (Htnew@=<0, retract(player_health(Ht)), asserta(player_health(0))))),nl,!.
-  
-  
 
-
+enemy_attack.
