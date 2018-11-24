@@ -44,9 +44,12 @@ exec(n) :- move(0,-1),enemyList(L), enemyMove(L), !.
 exec(e) :- move(1,0), enemyList(L), enemyMove(L), !.
 exec(s) :- move(0,1), enemyList(L), enemyMove(L), !.
 exec(w) :- move(-1,0),enemyList(L), enemyMove(L), !.
-
+exec(take(Object)):- !, take(Object), !.
+exec(drop(Object)):- !, drop(Object), !.
+exec(use(Object)):- !, use(Object), !.
 exec(help) :- helpcmd, !.
 exec(exit) :- write('Yah kok udahan :('),!.
+exec(printlist(X)):- call(printlist(X)), !.
 exec(_) :- write('Invalid command, kan programnya belum kelar :('), nl, !.
 
 /*Miscelanious*/
@@ -98,7 +101,7 @@ initPlayer :-
   asserta(player_health(100)),
   asserta(player_armor(0)),
   asserta(player_ammo(5)),
-  asserta(player_inv(15)),
+  asserta(player_inv([])),
   asserta(player_weapon(awm)).
 
 initItem :-
@@ -163,8 +166,8 @@ status :-
   write('Armor  : '), write(Ar), nl,
   write('Equipped Weapon : '), write(W), write(' ('), write(Dmg) , write(')'), nl,
   write('Ammo   : '), write(Am),nl,
-  ( Inventory == [] -> write('Tas mu kosong mas '), nl, !
-  ; write('Inventory : '), nl, printlist(Inventory), nl, !
+  ( Inventory == [] -> write('Inventory : (Tas mu kosong mas .) '), nl, !
+  ; write('Inventory : '), nl, printlist(Inventory), !
   ).
 
 /*Deklarasi dan rule terkait map*/
@@ -323,6 +326,7 @@ len([], LenResult):-
 
 len([_|Y], LenResult):-
     len(Y, L), LenResult is L + 1.
+
 
 /* Print list ke layar */
 printlist([]) :- !.
