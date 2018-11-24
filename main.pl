@@ -44,6 +44,7 @@ exec(n) :- move(0,-1),enemyList(L), enemyMove(L), !.
 exec(e) :- move(1,0), enemyList(L), enemyMove(L), !.
 exec(s) :- move(0,1), enemyList(L), enemyMove(L), !.
 exec(w) :- move(-1,0),enemyList(L), enemyMove(L), !.
+
 exec(help) :- helpcmd, !.
 exec(exit) :- write('Yah kok udahan :('),!.
 exec(_) :- write('Invalid command, kan programnya belum kelar :('), nl, !.
@@ -61,16 +62,19 @@ print_title :-
 
 helpcmd :-
   write('Currently usable command:'),nl,
-  write('  $- map  : print the whole map'),nl,
-  write('  $- look : look around'),nl,
-  write('  $- att  : attack enemy in the same grid'),nl,
-  write('  $- stat : show current status'),nl,
-  write('  $- n    : move north'),nl,
-  write('  $- e    : move east'),nl,
-  write('  $- s    : move south'),nl,
-  write('  $- w    : move west'),nl,
-  write('  $- help : show this help'),nl,
-  write('  $- exit : exit the game'),nl.
+  write('  $- map             : print the whole map'),nl,
+  write('  $- look            : look around'),nl,
+  write('  $- att             : attack enemy in the same grid'),nl,
+  write('  $- stat            : show current status'),nl,
+  write('  $- n               : move north'),nl,
+  write('  $- e               : move east'),nl,
+  write('  $- s               : move south'),nl,
+  write('  $- w               : move west'),nl,
+  write('  $- take(Object)    : take object on your position'),nl,
+  write('  $- drop(Object)    : drop object from your inventory'),nl, 
+  write('  $- use(Object)     : use object from your inventory'),nl,
+  write('  $- help            : show this help'),nl,
+  write('  $- exit            : exit the game'),nl.
 
 /*Endgame Conditions*/
 endGame :-
@@ -154,11 +158,14 @@ med_heal(first_aid_kit,80).
 
 /*Player status*/
 status :-
-  player_health(H), player_armor(Ar), player_weapon(W), player_ammo(Am), weapon_dmg(W,Dmg),
+  player_health(H), player_armor(Ar), player_weapon(W), player_ammo(Am), weapon_dmg(W,Dmg), player_inv(Inventory),
   write('Health : '), write(H), nl,
   write('Armor  : '), write(Ar), nl,
   write('Equipped Weapon : '), write(W), write(' ('), write(Dmg) , write(')'), nl,
-  write('Ammo   : '), write(Am),nl, !.
+  write('Ammo   : '), write(Am),nl,
+  ( Inventory == [] -> write('Tas mu kosong mas '), nl, !
+  ; write('Inventory : '), nl, printlist(Inventory), nl, !
+  ).
 
 /*Deklarasi dan rule terkait map*/
 
@@ -293,7 +300,7 @@ look :-
   write(' '),print_pos(Xmin,Y), print_pos(X,Y), print_pos(Xplus,Y), nl,
   write(' '),print_pos(Xmin,Yplus), print_pos(X,Yplus), print_pos(Xplus,Yplus),nl.
 
-/*Deklarasi dan rule terkait movement player*/
+/*Deklarasi dan rule terkait movement player dan inventori (use, take, drop)*/
 is_valid_move(X,_) :- deadzone_size(V), X@=<V, !, fail.
 is_valid_move(_,Y) :- deadzone_size(V), Y@=<V, !, fail.
 is_valid_move(X,_) :- deadzone_size(V), Vright is 11-V ,X@>=Vright, !, fail.
@@ -309,6 +316,83 @@ move(X,Y) :-
 
 /*Rule untuk invalid move*/
 move(_,_) :- write('You cannot go into the deadzone, dumbass'),nl.
+
+/* Menampilkan panjang list */
+len([], LenResult):-
+    LenResult is 0.
+
+len([_|Y], LenResult):-
+    len(Y, L), LenResult is L + 1.
+
+/* Print list ke layar */
+printlist([]) :- !.
+printlist([A|B]) :- write(' o '),write(A),nl,printlist(B).
+
+
+/* Take command */
+take(Object) :- 
+                ( can_take(Object) -> format('You took ~w !',[Object]),nl,!
+                ; format('~w does not exist here or your inventory is full',[Object]),nl,fail
+                ).
+
+can_take(O) :-
+  (player_pos(A,B), weapon_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N))
+  ;player_pos(A,B), ammo_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N))
+  ;player_pos(A,B), armor_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N))
+  ;player_pos(A,B), med_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N))
+  ).  
+
+/* Drop command */
+
+is_member(O):- player_inv(Inventory), member(O, Inventory).
+
+delete_item(O):- retract(player_inv(I)),
+                 delete_once(O, I, NI),
+                 asserta(player_inv(NI)).
+
+/* Delete satu element list */
+delete_once(X,[X|Xs],Xs) :- !.
+delete_once(X,[Y|Xs],[Y|Ys]) :- X \== Y , delete_once(X,Xs,Ys).
+
+drop(O):-
+  (is_member(O) -> delete_item(O), player_pos(X, Y), (weapon_obj(O) -> asserta(weapon_pos(X,Y,O)), format('You drop ~w !',[O]),nl,!
+                                                     ;ammo_obj(O) -> asserta(ammo_pos(X,Y,O)), format('You drop ~w !',[O]),nl,!
+                                                     ;armor_obj(O) -> asserta(armor_pos(X,Y,O)), format('You drop ~w !',[O]),nl,!
+                                                     ;med_obj(O) -> asserta(med_pos(X,Y,O)), format('You drop ~w !',[O]),nl,!
+                                                      )
+   ; format('~w does not exist in your inventory',[O]),nl, fail
+   ).
+
+/* Use command */
+
+is_valid_ammo(O):-
+  player_weapon(X),
+  ammo_type(_,O), weapon_type(X,Y), O = Y.
+
+set_weapon(X):-
+  retract(player_weapon(_)),
+  asserta(player_weapon(X)).
+
+set_ammo(X):-
+  retract(player_ammo(_)),
+  asserta(player_ammo(X)).
+
+set_armor(X):- 
+  retract(player_armor(_)),
+  asserta(player_armor(X)).
+
+
+
+use(O):-
+  (is_member(O) -> 
+    (weapon_obj(O) -> set_weapon(O), format('You held ~w in your hand .',[O]),nl, delete_item(O), !
+    ;ammo_obj(O) -> (is_valid_ammo(O) -> (set_ammo(O), write('Your weapon successfuly reloaded .'), nl, delete_item(O), !
+                    ; write('Your ammo isnt compatible with your weapon .'),nl, fail)), !
+    ;armor_obj(O) -> set_armor(O), format('Now you wear some ~w .', [O]), nl, delete_item(O), !
+    ;med_obj(O) -> player_health(X), med_heal(O,Y), Z is X + Y, Z > 100 -> Z is 100, format('Youre healed! Your HP increased by ~w', [Y]), nl, delete_item(O) , !
+    )
+  ; format('~w does not exist in your inventory', [O]), nl, fail
+  ).
 
 /* Enemy */
 initEnemy :-
