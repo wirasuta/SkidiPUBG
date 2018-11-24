@@ -50,6 +50,10 @@ exec(use(Object)):- !, use(Object), !.
 exec(help) :- helpcmd, !.
 exec(exit) :- write('Yah kok udahan :('),!.
 exec(printlist(X)):- call(printlist(X)), !.
+exec(weapon_pos(X, Y, W)):-  weapon_pos(X, Y, W), !.
+exec(armor_pos(X, Y, Ar)):- armor_pos(X, Y, Ar), !.
+exec(ammo_pos(X, Y, A)):-  ammo_pos(X, Y, A), !.
+exec(med_pos(X, Y, M)):-  med_pos(X, Y, M), !.
 exec(_) :- write('Invalid command, kan programnya belum kelar :('), nl, !.
 
 /*Miscelanious*/
@@ -190,21 +194,25 @@ print_pos(X,Y) :-
   med_pos(A,B,_),
   A==X, B==Y, !,
   write('M').
+
 /*Weapon*/
 print_pos(X,Y) :-
   weapon_pos(A,B,_),
   A==X, B==Y, !,
   write('W').
+
 /*Armor*/
 print_pos(X,Y) :-
   armor_pos(A,B,_),
   A==X, B==Y, !,
   write('A').
+
 /*Ammo*/
 print_pos(X,Y) :-
   ammo_pos(A,B,_),
   A==X, B==Y, !,
   write('+').
+  
 /*Player*/
 print_pos(X,Y) :-
   player_pos(A,B),
@@ -212,6 +220,24 @@ print_pos(X,Y) :-
   write('P').
 /*Regular tiles*/
 print_pos(_,_) :- write('-').
+
+print_spec(X, Y) :-
+  med_pos(A,B,C),
+  A==X, B==Y, !,
+  format('~w', [C]).
+print_spec(X, Y) :-
+  weapon_pos(A,B,C),
+  A==X, B==Y, !,
+  format('~w', [C]).
+print_spec(X, Y) :-
+  armor_pos(A,B,C),
+  A==X, B==Y, !,
+  format('~w', [C]).
+print_spec(X, Y) :-
+  ammo_pos(A,B,C),
+  A==X, B==Y, !,
+  format('~w', [C]).
+print_spec(_,_) :- write('-').
 
 print_map(11,11) :- print_pos(11,11),nl,!.
 print_map(11,Y) :- Ynew is Y+1, print_pos(11,Y),nl,!,print_map(0,Ynew).
@@ -301,7 +327,9 @@ look :-
   Xmin is X-1, Xplus is X+1, Ymin is Y-1, Yplus is Y+1,
   write(' '),print_pos(Xmin,Ymin), print_pos(X,Ymin), print_pos(Xplus,Ymin), nl,
   write(' '),print_pos(Xmin,Y), print_pos(X,Y), print_pos(Xplus,Y), nl,
-  write(' '),print_pos(Xmin,Yplus), print_pos(X,Yplus), print_pos(Xplus,Yplus),nl.
+  write(' '),print_pos(Xmin,Yplus), print_pos(X,Yplus), print_pos(Xplus,Yplus),nl,
+  write(' Stuff dropped here: '), print_spec(X,Y), nl.
+  
 
 /*Deklarasi dan rule terkait movement player dan inventori (use, take, drop)*/
 is_valid_move(X,_) :- deadzone_size(V), X@=<V, !, fail.
@@ -330,7 +358,7 @@ len([_|Y], LenResult):-
 
 /* Print list ke layar */
 printlist([]) :- !.
-printlist([A|B]) :- write(' o '),write(A),nl,printlist(B).
+printlist([A|B]) :- write(' > '),write(A),nl,printlist(B).
 
 
 /* Take command */
@@ -340,10 +368,10 @@ take(Object) :-
                 ).
 
 can_take(O) :-
-  (player_pos(A,B), weapon_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N))
-  ;player_pos(A,B), ammo_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N))
-  ;player_pos(A,B), armor_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N))
-  ;player_pos(A,B), med_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N))
+  (player_pos(A,B), weapon_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N)), retract(weapon_pos(X,Y,O))
+  ;player_pos(A,B), ammo_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N)), retract(ammo_pos(X,Y,O))
+  ;player_pos(A,B), armor_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N)), retract(armor_pos(X,Y,O))
+  ;player_pos(A,B), med_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N)), retract(med_pos(X,Y,O))
   ).  
 
 /* Drop command */
