@@ -40,10 +40,10 @@ exec(att) :- attack, enemy_attack,!.
 exec(stat) :- status,!.
 exec(trace) :- trace, !.
 exec(notrace) :- notrace, !.
-exec(n) :- move(0,-1),enemyList(L), enemyMove(L), !.
-exec(e) :- move(1,0), enemyList(L), enemyMove(L), !.
-exec(s) :- move(0,1), enemyList(L), enemyMove(L), !.
-exec(w) :- move(-1,0),enemyList(L), enemyMove(L), !.
+exec(n) :- move(0,-1),enemyList(L), enemyMove(L), print_dir, !.
+exec(e) :- move(1,0), enemyList(L), enemyMove(L), print_dir, !.
+exec(s) :- move(0,1), enemyList(L), enemyMove(L), print_dir, !.
+exec(w) :- move(-1,0),enemyList(L), enemyMove(L), print_dir, !.
 exec(take(Object)):- !, take(Object), !.
 exec(drop(Object)):- !, drop(Object), !.
 exec(use(Object)):- !, use(Object), !.
@@ -54,7 +54,7 @@ exec(weapon_pos(X, Y, W)):-  weapon_pos(X, Y, W), !.
 exec(armor_pos(X, Y, Ar)):- armor_pos(X, Y, Ar), !.
 exec(ammo_pos(X, Y, A)):-  ammo_pos(X, Y, A), !.
 exec(med_pos(X, Y, M)):-  med_pos(X, Y, M), !.
-exec(_) :- write('Invalid command, kan programnya belum kelar :('), nl, !.
+exec(_) :- write('Invalid command, consider thy command.'), nl, !.
 
 /*Miscelanious*/
 print_title :-
@@ -424,8 +424,8 @@ map :-
   write(' [X] Deadzone  | [P] Player'),nl,
   write(' [M] Medicine  | [A] Armor'),nl,
   write(' [W] Weapon    | [+] Ammo'),nl,
-  print_map(0,0),nl,
-  print_dir.
+  print_map(0,0),nl.
+  
   
 
 look :-
