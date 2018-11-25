@@ -78,7 +78,7 @@ helpcmd :-
   write('  $- s               : move south'),nl,
   write('  $- w               : move west'),nl,
   write('  $- take(Object)    : take object on your position'),nl,
-  write('  $- drop(Object)    : drop object from your inventory'),nl, 
+  write('  $- drop(Object)    : drop object from your inventory'),nl,
   write('  $- use(Object)     : use object from your inventory'),nl,
   write('  $- help            : show this help'),nl,
   write('  $- exit            : exit the game'),nl.
@@ -102,7 +102,7 @@ endGame :-
 /*Game initialization*/
 initPlayer :-
   asserta(player_pos(5,5)),
-  asserta(player_health(100)),
+  asserta(player_health(10)),
   asserta(player_armor(0)),
   asserta(player_ammo(5)),
   asserta(player_inv([])),
@@ -212,7 +212,7 @@ print_pos(X,Y) :-
   ammo_pos(A,B,_),
   A==X, B==Y, !,
   write('+').
-  
+
 /*Player*/
 print_pos(X,Y) :-
   player_pos(A,B),
@@ -329,7 +329,7 @@ look :-
   write(' '),print_pos(Xmin,Y), print_pos(X,Y), print_pos(Xplus,Y), nl,
   write(' '),print_pos(Xmin,Yplus), print_pos(X,Yplus), print_pos(Xplus,Yplus),nl,
   write(' Stuff dropped here: '), print_spec(X,Y), nl.
-  
+
 
 /*Deklarasi dan rule terkait movement player dan inventori (use, take, drop)*/
 is_valid_move(X,_) :- deadzone_size(V), X@=<V, !, fail.
@@ -362,7 +362,7 @@ printlist([A|B]) :- write(' > '),write(A),nl,printlist(B).
 
 
 /* Take command */
-take(Object) :- 
+take(Object) :-
                 ( can_take(Object) -> format('You took ~w !',[Object]),nl,!
                 ; format('~w does not exist here or your inventory is full',[Object]),nl,fail
                 ).
@@ -372,7 +372,7 @@ can_take(O) :-
   ;player_pos(A,B), ammo_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N)), retract(ammo_pos(X,Y,O))
   ;player_pos(A,B), armor_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N)), retract(armor_pos(X,Y,O))
   ;player_pos(A,B), med_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N)), retract(med_pos(X,Y,O))
-  ).  
+  ).
 
 /* Drop command */
 
@@ -409,19 +409,38 @@ set_ammo(X):-
   retract(player_ammo(_)),
   asserta(player_ammo(X)).
 
-set_armor(X):- 
+set_armor(X):-
   retract(player_armor(_)),
-  asserta(player_armor(X)).
+  armor_amount(X,V),
+  asserta(player_armor(V)).
 
+heal_player(_) :-
+  player_health(X),
+  X==100,
+  write('You cannot heal, your health is full'), nl, !.
 
+heal_player(O) :-
+  player_health(X), med_heal(O,Y),
+  Z is X + Y, Z > 100, NHealth is 100,
+  HealAmt is 100-X,
+  retract(player_health(X)),
+  asserta(player_health(NHealth)),
+  format('Youre healed! Your HP increased by ~w', [HealAmt]), nl, !.
+
+heal_player(O) :-
+  player_health(X), med_heal(O,Y),
+  Z is X + Y,
+  retract(player_health(X)),
+  asserta(player_health(Z)),
+  format('Youre healed! Your HP increased by ~w', [Y]), nl, !.
 
 use(O):-
-  (is_member(O) -> 
+  (is_member(O) ->
     (weapon_obj(O) -> set_weapon(O), format('You held ~w in your hand .',[O]),nl, delete_item(O), !
     ;ammo_obj(O) -> (is_valid_ammo(O) -> (set_ammo(O), write('Your weapon successfuly reloaded .'), nl, delete_item(O), !
                     ; write('Your ammo isnt compatible with your weapon .'),nl, fail)), !
     ;armor_obj(O) -> set_armor(O), format('Now you wear some ~w .', [O]), nl, delete_item(O), !
-    ;med_obj(O) -> player_health(X), med_heal(O,Y), Z is X + Y, Z > 100 -> Z is 100, format('Youre healed! Your HP increased by ~w', [Y]), nl, delete_item(O) , !
+    ;med_obj(O) -> heal_player(O), delete_item(O), !
     )
   ; format('~w does not exist in your inventory', [O]), nl, fail
   ).
@@ -541,18 +560,41 @@ attack :-
 enemy_attack :-
   player_pos(X,Y),
   enemy_pos(H,A,B),
-  X==A, Y==B, !,
+  X==A, Y==B,
   enemy_weapon(H,W), weapon_dmg(W,Dmg),
-  player_health(Ht), player_armor(Arm),!,
-  (Arm@>0, (NewArm is Arm-Dmg, !,
-           (NewArm@>=0, retract(player_armor(Arm)), asserta(player_armor(NewArm)),
-           write('Your current armor: '),write(NewArm));
-           (NewArm@<0, retract(player_armor(Arm)), asserta(player_armor(0)),
+  player_health(Ht), player_armor(Arm),
+  Arm@>0, NewArm is Arm-Dmg,
+           NewArm@>=0, !, retract(player_armor(Arm)), asserta(player_armor(NewArm)),
+           write('Your current armor: '),write(NewArm),nl,!.
+
+enemy_attack :-
+  player_pos(X,Y),
+  enemy_pos(H,A,B),
+  X==A, Y==B,
+  enemy_weapon(H,W), weapon_dmg(W,Dmg),
+  player_health(Ht), player_armor(Arm),
+  Arm@>0, NewArm is Arm-Dmg,
+           NewArm@<0, !, retract(player_armor(Arm)), asserta(player_armor(0)),
            Htnew is Ht+NewArm, retract(player_health(Ht)), asserta(player_health(Htnew)),
-           write('Your current health: '),write(Htnew)));
-  Arm==0, (Htnew is Ht-Dmg, !,
-          (Htnew@>0, retract(player_health(Ht)), asserta(player_health(Htnew)),
-          write('Your current health: '),write(Htnew));
-          (Htnew@=<0, retract(player_health(Ht)), asserta(player_health(0))))),nl,!.
+           write('Your current health: '),write(Htnew),nl,!.
+
+enemy_attack :-
+  player_pos(X,Y),
+  enemy_pos(H,A,B),
+  X==A, Y==B,
+  enemy_weapon(H,W), weapon_dmg(W,Dmg),
+  player_health(Ht), player_armor(Arm),
+  Arm==0, Htnew is Ht-Dmg,
+          Htnew@>0, !, retract(player_health(Ht)), asserta(player_health(Htnew)),
+          write('Your current health: '),write(Htnew),nl,!.
+
+enemy_attack :-
+  player_pos(X,Y),
+  enemy_pos(H,A,B),
+  X==A, Y==B,
+  enemy_weapon(H,W), weapon_dmg(W,Dmg),
+  player_health(Ht), player_armor(Arm),
+  Arm==0, Htnew is Ht-Dmg,
+          Htnew@=<0, !, retract(player_health(Ht)), asserta(player_health(0)),!.
 
 enemy_attack.
