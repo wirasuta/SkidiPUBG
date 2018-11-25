@@ -111,7 +111,7 @@ initPlayer :-
 initItem :-
  /* asserta(weapon_pos(1,1,awm)),
   asserta(ammo_pos(5,5,sniper_ammo)),
-  asserta(armor_pos(3,4,helm_spetsnaz)),
+  asserta(armor_pos(5,5,helm_spetsnaz)),
   asserta(med_pos(3,3,med_kit)), */
   weapon_ammo_generate(3),
   armor_generate(3),
@@ -469,8 +469,20 @@ is_valid_ammo(O):-
   
 
 set_weapon(X):-
-  retract(player_weapon(_)),
-  asserta(player_weapon(X)).
+  player_weapon(Y),
+  player_ammo(Z),
+  player_inv(I),
+  weapon_type(Y, T),
+  ammo_type(A,T),
+  append(A, I, New),
+  append(Y, I, New),
+  B is 0,
+  retract(player_ammo(Z)),
+  retract(player_inv(I)),
+  retract(player_weapon(Y)),
+  asserta(player_ammo(B)),
+  asserta(player_weapon(X)),
+  asserta(player_inv(New)),!.
 
 set_ammo(X):-
   player_ammo(C),
@@ -634,16 +646,16 @@ enemy_attack :-
   enemy_pos(H,A,B),
   X==A, Y==B, !,
   enemy_weapon(H,W), weapon_dmg(W,Dmg),
-  player_health(Ht), player_armor(Arm),!,
-  (Arm@>0, (NewArm is Arm-Dmg, !,
-           (NewArm@>=0, retract(player_armor(Arm)), asserta(player_armor(NewArm)),
-           write('Your current armor: '),write(NewArm));
-           (NewArm@<0, retract(player_armor(Arm)), asserta(player_armor(0)),
+  player_health(Ht), player_armor(Arm),
+  ((Arm > 0) -> (NewArm is Arm-Dmg, !,
+           (NewArm >= 0 -> (retract(player_armor(Arm)), asserta(player_armor(NewArm)),
+           write('Your current armor: '),write(NewArm))
+           ;(retract(player_armor(Arm)), asserta(player_armor(0)),
            Htnew is Ht+NewArm, retract(player_health(Ht)), asserta(player_health(Htnew)),
-           write('Your current health: '),write(Htnew)));
-  Arm==0, (Htnew is Ht-Dmg, !,
-          (Htnew@>0, retract(player_health(Ht)), asserta(player_health(Htnew)),
+           write('Your current health: '),write(Htnew))))
+           ;(Htnew is Ht-Dmg, !,
+          (Htnew > 0 -> (retract(player_health(Ht)), asserta(player_health(Htnew)),
           write('Your current health: '),write(Htnew));
-          (Htnew@=<0, retract(player_health(Ht)), asserta(player_health(0))))),nl,!.
+          (Htnew =< 0, retract(player_health(Ht)), asserta(player_health(0)))))),nl,!.
 
 enemy_attack.
