@@ -104,15 +104,15 @@ initPlayer :-
   asserta(player_pos(5,5)),
   asserta(player_health(100)),
   asserta(player_armor(0)),
-  asserta(player_ammo(5)),
+  asserta(player_ammo(0)),
   asserta(player_inv([])),
   asserta(player_weapon(awm)).
 
 initItem :-
- /* asserta(weapon_pos(1,1,awm)),
-  asserta(ammo_pos(5,5,sniper_ammo)),
+  asserta(weapon_pos(5,5,m24)),
+  asserta(ammo_pos(5,5,smg_ammo)),
   asserta(armor_pos(5,5,helm_spetsnaz)),
-  asserta(med_pos(3,3,med_kit)), */
+  asserta(med_pos(3,3,med_kit)),
   weapon_ammo_generate(3),
   armor_generate(3),
   med_generate(3),
@@ -469,20 +469,13 @@ is_valid_ammo(O):-
   
 
 set_weapon(X):-
-  player_weapon(Y),
-  player_ammo(Z),
-  player_inv(I),
-  weapon_type(Y, T),
-  ammo_type(A,T),
-  append(A, I, New),
-  append(Y, I, New),
-  B is 0,
-  retract(player_ammo(Z)),
-  retract(player_inv(I)),
-  retract(player_weapon(Y)),
-  asserta(player_ammo(B)),
-  asserta(player_weapon(X)),
-  asserta(player_inv(New)),!.
+    player_weapon(C),
+    player_inv(I),
+    append([C], I, N),
+    retract(player_inv(I)),
+    retract(player_weapon(C)),
+    asserta(player_inv(N)),
+    asserta(player_weapon(X)).
 
 set_ammo(X):-
   player_ammo(C),
