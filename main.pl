@@ -375,13 +375,32 @@ deadzone_tick :-
 
 deadzone_tick :- !.
 
+print_dir:-
+  player_pos(X,Y),
+  ((X @=< 5, Y @=< 5) -> (write('You are in pochinki. '), (X == 5, Y == 5) -> (write('north is pochinki, east is forest, south is rozok, west is pochinki.'))
+                                                        ;(X == 5, Y @< 5, Y =\= 1) -> (write('north is pochinki, east is forest, south is pochinki, west is pochinki.'))
+                                                        ;(X @< 5, Y @< 5, Y =\= 1, X =\= 1) -> (write('north is pochinki, east is pochinki, south is pochinki, west is pochinki.'))
+                                                        ;(X == 1, Y == 1) -> (write('north is deadzone, east is pochinki, south is pochinki, west is deadzone.'))
+                                                        ;(X @< 5, Y == 5, X =\= 1) -> (write('north is pochinki, east is pochinki, south is rozok, west is pochinki.'))
+                                                        );
+  (X @> 5, Y @=< 5) -> (write('You are in forest. '),      (X == 6, Y == 5) -> (write('north is forest, east is forest, south is portland, west is pochinki.'))
+                                                        ;(X == 6, Y @< 5, Y =\= 1) -> (write('north is forest, east is forest, south is portland, west is pochinki.'))
+                                                        ;(X == 6, Y == 1) -> (write('north is deadzone, east is forest, south is portland, west is pochinki.'))
+                                                        ;(X @> 6, Y == 1, X =\= 10) -> (write('north is deadzone, east is forest, south is forest, west is forest.'))
+                                                        ;(X == 10, Y == 1) -> (write('north is deadzone, east is deadzone, south is forest, west is forest.'))
+                                                        ;(X == 10, Y @< 5, Y =\= 1, Y =\= 5) -> (write('north is forest, east is deadzone, south is forest, west is forest.'))
+                                                        );
+  (X @=< 5, Y @> 5) -> write('You are in rozok. ');
+  (X @> 5, Y @> 5) -> write('You are in portland. ')),nl,nl.
+
 map :-
-  write('You are in pochinki'),nl,
   write('Tiles info:'),nl,
   write(' [X] Deadzone  | [P] Player'),nl,
   write(' [M] Medicine  | [A] Armor'),nl,
   write(' [W] Weapon    | [+] Ammo'),nl,
-  print_map(0,0).
+  print_map(0,0),nl,
+  print_dir.
+  
 
 look :-
   write('You look your surrounding'),nl,
