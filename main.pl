@@ -109,8 +109,8 @@ initPlayer :-
   asserta(player_weapon(awm)).
 
 initItem :-
-  /* asserta(weapon_pos(1,1,awm)),
-  asserta(ammo_pos(1,3,sniper_ammo)),
+ /* asserta(weapon_pos(1,1,awm)),
+  asserta(ammo_pos(5,5,sniper_ammo)),
   asserta(armor_pos(3,4,helm_spetsnaz)),
   asserta(med_pos(3,3,med_kit)), */
   weapon_ammo_generate(3),
@@ -236,7 +236,7 @@ status :-
   write('Armor  : '), write(Ar), nl,
   write('Equipped Weapon : '), write(W), write(' ('), write(Dmg) , write(')'), nl,
   write('Ammo   : '), write(Am),nl,
-  ( Inventory == [] -> write('Inventory : (Tas mu kosong mas .) '), nl, !
+  ( Inventory == [] -> write('Inventory : - '), nl, !
   ; write('Inventory : '), nl, printlist(Inventory), !
   ).
 
@@ -465,7 +465,7 @@ drop(O):-
 
 is_valid_ammo(O):-
   player_weapon(X),
-  ammo_type(_,O), weapon_type(X,Y), O = Y.
+  ammo_type(O,P), weapon_type(X,Y), P = Y.
   
 
 set_weapon(X):-
@@ -473,12 +473,18 @@ set_weapon(X):-
   asserta(player_weapon(X)).
 
 set_ammo(X):-
+  player_ammo(C),
+  ammo_count(X,Y),
+  N is Y + C,
   retract(player_ammo(_)),
-  asserta(player_ammo(X)).
+  asserta(player_ammo(N)).
 
 set_armor(X):- 
+  player_armor(C),
+  armor_amount(X, Y),
+  N is Y + C,
   retract(player_armor(_)),
-  asserta(player_armor(X)).
+  asserta(player_armor(N)).
 
 heal_player(_) :-
   player_health(X),
@@ -503,8 +509,8 @@ heal_player(O) :-
 use(O):-
   (is_member(O) ->
     (weapon_obj(O) -> set_weapon(O), format('You held ~w in your hand .',[O]),nl, delete_item(O), !
-    ;ammo_obj(O) -> (is_valid_ammo(O) -> (set_ammo(O), write('Your weapon successfuly reloaded .'), nl, delete_item(O), !
-                    ; write('Your ammo isnt compatible with your weapon .'),nl, fail)), !
+    ;ammo_obj(O) -> (is_valid_ammo(O) -> (set_ammo(O), write('Your weapon successfuly reloaded .'), nl, delete_item(O), !)
+                    ;(write('Your ammo isnt compatible with your weapon .'),nl, fail)), !
     ;armor_obj(O) -> set_armor(O), format('Now you wear some ~w .', [O]), nl, delete_item(O), !
     ;med_obj(O) -> heal_player(O), delete_item(O), !
     )
