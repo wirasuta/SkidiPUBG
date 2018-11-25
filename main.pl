@@ -40,10 +40,10 @@ exec(att) :- attack, enemy_attack,!.
 exec(stat) :- status,!.
 exec(trace) :- trace, !.
 exec(notrace) :- notrace, !.
-exec(n) :- move(0,-1),enemyList(L), enemyMove(L), print_dir, !.
-exec(e) :- move(1,0), enemyList(L), enemyMove(L), print_dir, !.
-exec(s) :- move(0,1), enemyList(L), enemyMove(L), print_dir, !.
-exec(w) :- move(-1,0),enemyList(L), enemyMove(L), print_dir, !.
+exec(n) :- move(0,-1),enemyList(L), enemyMove(L), !.
+exec(e) :- move(1,0), enemyList(L), enemyMove(L), !.
+exec(s) :- move(0,1), enemyList(L), enemyMove(L), !.
+exec(w) :- move(-1,0),enemyList(L), enemyMove(L), !.
 exec(take(Object)):- !, take(Object), !.
 exec(drop(Object)):- !, drop(Object), !.
 exec(use(Object)):- !, use(Object), !.
@@ -54,7 +54,7 @@ exec(weapon_pos(X, Y, W)):-  weapon_pos(X, Y, W), !.
 exec(armor_pos(X, Y, Ar)):- armor_pos(X, Y, Ar), !.
 exec(ammo_pos(X, Y, A)):-  ammo_pos(X, Y, A), !.
 exec(med_pos(X, Y, M)):-  med_pos(X, Y, M), !.
-exec(_) :- write('Invalid command. Type \'help\' to show list of available command'), nl, !.
+exec(_) :- write('Invalid command, kan programnya belum kelar :('), nl, !.
 
 /*Miscelanious*/
 print_title :-
@@ -68,7 +68,7 @@ print_title :-
   write('======== LOOT , SCOOP and SKIDIPAPAP ========'),nl,nl.
 
 helpcmd :-
-  write('Command list:'),nl,
+  write('Currently usable command:'),nl,
   write('  $- map             : print the whole map'),nl,
   write('  $- look            : look around'),nl,
   write('  $- att             : attack enemy in the same grid'),nl,
@@ -78,7 +78,7 @@ helpcmd :-
   write('  $- s               : move south'),nl,
   write('  $- w               : move west'),nl,
   write('  $- take(Object)    : take object on your position'),nl,
-  write('  $- drop(Object)    : drop object from your inventory'),nl,
+  write('  $- drop(Object)    : drop object from your inventory'),nl, 
   write('  $- use(Object)     : use object from your inventory'),nl,
   write('  $- help            : show this help'),nl,
   write('  $- exit            : exit the game'),nl.
@@ -278,7 +278,7 @@ print_pos(X,Y) :-
   ammo_pos(A,B,_),
   A==X, B==Y, !,
   write('+').
-
+  
 /*Player*/
 print_pos(X,Y) :-
   player_pos(A,B),
@@ -375,29 +375,58 @@ deadzone_tick :-
 
 deadzone_tick :- !.
 
-/*Terrain*/
-
-terrain(deadzone,X,Y) :-
-  deadzone_size(V),
-  (X@=<V; Y@=<V; Vright is 11-V ,X@>=Vright; Vright is 11-V ,Y@>=Vright), !.
-terrain(pochinki,X,Y) :- X@=<5, Y@=<5, !.
-terrain(forest,X,Y) :- X>5, Y@=<5, !.
-terrain(rozok,X,Y) :- X@=<5, Y>5, !.
-terrain(portland,X,Y) :- X>5, Y>5, !.
-
 print_dir:-
   player_pos(X,Y),
-  Xmin is X-1, Xplus is X+1, Ymin is Y-1, Yplus is Y+1,
-  terrain(P,X,Y), terrain(N,X,Ymin), terrain(E,Xplus,Y), terrain(S,X,Yplus), terrain(W,Xmin,Y),
-  format('You are in ~w. In your north is ~w. In your east is ~w. In your south is ~w. In your west is ~w.', [P,N,E,S,W]),nl,!.
+  ((X @=< 5, Y @=< 5) -> (write('You are in pochinki. '), (X == 5, Y == 5) -> (write('north is pochinki, east is forest, south is rozok, west is pochinki.')),!
+                                                        ;(X == 5, Y @< 5, Y =\= 1) -> (write('north is pochinki, east is forest, south is pochinki, west is pochinki.')),!
+                                                        ;(X == 5, Y == 1) -> (write('north is deadzone, east is forest, south is pochinki, west is pochinki.')),!
+                                                        ;(X @< 5, Y == 1, X =\= 1) -> (write('north is deadzone, east is pochinki, south is pochinki, west is pochinki.')),!
+                                                        ;(X == 1, Y == 1) -> (write('north is deadzone, east is pochinki, south is pochinki, west is deadzone.')),!
+                                                        ;(X == 1, Y @< 5, Y =\= 1) -> (write('north is pochinki, east is pochinki, south is pochinki, west is deadzone.')),!
+                                                        ;(X == 1, Y == 5) -> (write('north is pochinki, east is pochinki, south is rozok, west is deadzone.')),!
+                                                        ;(X @< 5, Y == 5, X =\= 1) -> (write('north is pochinki, east is pochinki, south is rozok, west is pochinki.')),!
+                                                        ;(X @< 5, Y @< 5) -> (write('north is pochinki, east is pochinki, south is pochinki, west is pochinki.')),!
+                                                        );
+  (X @> 5, Y @=< 5) -> (write('You are in forest. '),    (X == 10, Y == 5) -> (write('north is forest, east is deadzone, south is portland, west is forest.')),!
+                                                        ;(X == 10, Y @< 5, Y =\= 1) -> (write('north is forest, east is deadzone, south is forest, west is forest.')),!
+                                                        ;(X == 10, Y == 1) -> (write('north is deadzone, east is deadzone, south is forest, west is forest.')),!
+                                                        ;(X @< 10, Y == 1, X =\= 6) -> (write('north is deadzone, east is forest, south is forest, west is forest.')),!
+                                                        ;(X == 6, Y == 1) -> (write('north is deadzone, east is forest, south is forest, west is pochinki.')),!
+                                                        ;(X == 6, Y @< 5, Y =\= 1) -> (write('north is forest, east is forest, south is forest, west is pochinki.')),!
+                                                        ;(X == 6, Y == 5) -> (write('north is forest, east is forest, south is portland, west is pochinki.')),!
+                                                        ;(X @< 10, Y == 5, X =\= 6) -> (write('north is forest, east is forest, south is portland, west is forest.')),!
+                                                        ;(X @> 5, Y @< 5) -> (write('north is forest, east is forest, south is forest, west is forest.')),!
+                                                        );
+  (X @=< 5, Y @> 5) -> (write('You are in rozok. '),    (X == 5, Y == 10) -> (write('north is rozok, east is portland, south is deadzone, west is rozok.')),!
+                                                        ;(X == 5, Y @< 10, Y =\= 6) -> (write('north is rozok, east is portland, south is rozok, west is rozok.')),!
+                                                        ;(X == 5, Y == 6) -> (write('north is pochinki, east is portland, south is rozok, west is rozok.')),!
+                                                        ;(X @< 5, Y == 6, X =\= 1) -> (write('north is pochinki, east is rozok, south is rozok, west is rozok.')),!
+                                                        ;(X == 1, Y == 6) -> (write('north is pochinki, east is rozok, south is rozok, west is deadzone.')),!
+                                                        ;(X == 1, Y @< 10, Y =\= 6) -> (write('north is rozok, east is rozok, south is rozok, west is deadzone.')),!
+                                                        ;(X == 1, Y == 10) -> (write('north is forest, east is forest, south is deadzone, west is deadzone.')),!
+                                                        ;(X @< 5, Y == 10, X =\= 1) -> (write('north is rozok, east is rozok, south is deadzone, west is rozok.')),!
+                                                        ;(X @> 5, Y @< 5) -> (write('north is rozok, east is rozok, south is rozok, west is rozok.')),!
+                                                        );
+  (X @> 5, Y @> 5) -> (write('You are in portland. '),    (X == 10, Y == 10) -> (write('north is portland, east is deadzone, south is deadzone, west is portland.')),!
+                                                        ;(X == 10, Y @< 10, Y =\= 6) -> (write('north is portland, east is deadzone, south is portland, west is portland.')),!
+                                                        ;(X == 10, Y == 6) -> (write('north is forest, east is deadzone, south is portland, west is portland.')),!
+                                                        ;(X @< 10, Y == 6, X =\= 6) -> (write('north is forest, east is portland, south is portland, west is portland.')),!
+                                                        ;(X == 6, Y == 6) -> (write('north is forest, east is portland, south is portland, west is rozok.')),!
+                                                        ;(X == 6, Y @< 10, Y =\= 6) -> (write('north is portland, east is portland, south is portland, west is rozok.')),!
+                                                        ;(X == 6, Y == 10) -> (write('north is portland, east is portland, south is deadzone, west is rozok.')),!
+                                                        ;(X @< 10, Y == 10, X =\= 6) -> (write('north is portland, east is portland, south is deadzone, west is portland.')),!
+                                                        ;(X @> 5, Y @> 5) -> (write('north is portland, east is portland, south is portland, west is portland.')),!
+                                                        )
+  ),nl,nl.
 
 map :-
   write('Tiles info:'),nl,
   write(' [X] Deadzone  | [P] Player'),nl,
   write(' [M] Medicine  | [A] Armor'),nl,
   write(' [W] Weapon    | [+] Ammo'),nl,
-  print_map(0,0).
-
+  print_map(0,0),nl,
+  print_dir.
+  
 
 look :-
   write('You look your surrounding'),nl,
@@ -411,7 +440,7 @@ look :-
   write(' '),print_pos(Xmin,Y), print_pos(X,Y), print_pos(Xplus,Y), nl,
   write(' '),print_pos(Xmin,Yplus), print_pos(X,Yplus), print_pos(Xplus,Yplus),nl,
   write(' Stuff dropped here: '), print_spec(X,Y), nl.
-
+  
 
 /*Deklarasi dan rule terkait movement player dan inventori (use, take, drop)*/
 is_valid_move(X,_) :- deadzone_size(V), X@=<V, !, fail.
@@ -444,7 +473,7 @@ printlist([A|B]) :- write(' > '),write(A),nl,printlist(B).
 
 
 /* Take command */
-take(Object) :-
+take(Object) :- 
                 ( can_take(Object) -> format('You took ~w !',[Object]),nl,!
                 ; format('~w does not exist here or your inventory is full',[Object]),nl,fail
                 ).
@@ -454,7 +483,7 @@ can_take(O) :-
   ;player_pos(A,B), ammo_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N)), retract(ammo_pos(X,Y,O))
   ;player_pos(A,B), armor_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N)), retract(armor_pos(X,Y,O))
   ;player_pos(A,B), med_pos(X, Y, O), A == X, B == Y, player_inv(I), len(I, S), S < 15 -> append([O], I, N), retract(player_inv(I)), asserta(player_inv(N)), retract(med_pos(X,Y,O))
-  ).
+  ).  
 
 /* Drop command */
 
@@ -482,7 +511,7 @@ drop(O):-
 is_valid_ammo(O):-
   player_weapon(X),
   ammo_type(O,P), weapon_type(X,Y), P = Y.
-
+  
 
 set_weapon(X):-
     player_weapon(C),
@@ -500,7 +529,7 @@ set_ammo(X):-
   retract(player_ammo(_)),
   asserta(player_ammo(N)).
 
-set_armor(X):-
+set_armor(X):- 
   player_armor(C),
   armor_amount(X, Y),
   N is Y + C,
@@ -668,290 +697,3 @@ enemy_attack :-
           (Htnew =< 0, retract(player_health(Ht)), asserta(player_health(0)))))),nl,!.
 
 enemy_attack.
-
-/*SAVE LOAD*/
-save(X):-
-  atom_concat(X, '.txt', Filetxt),
-  open(Filetxt,write,Tulis),
-  player_pos(X,Y),
-  write(Tulis,X),write(Tulis,'.'),nl(Tulis),
-  write(Tulis,Y),write(Tulis,'.'),nl(Tulis),
-
-  player_health(Health),
-  write(Tulis,Health),write(Tulis,'.'),nl(Tulis),
-
-  player_armor(Armor),
-  write(Tulis,Armor),write(Tulis,'.'),nl(Tulis),
-
-  player_weapon(Weapon),
-  write(Tulis,Weapon),write(Tulis,'.'),nl(Tulis),
-
-  player_ammo(Ammo),
-  write(Tulis,Ammo),write(Tulis,'.'),nl(Tulis),
-
-  player_inv(List_inv),
-
-  /*WEAPON*/
-  /*  weapon_obj(awm).
-      weapon_obj(m24).
-      weapon_obj(akm).
-      weapon_obj(p18c).
-      weapon_obj(m1997). */
-
-  (member('awm', List_inv) -> atom_concat(own,'.',Temp1);
-   atom_concat(nope,'.',Temp1)),
-  write(Tulis,Temp1),nl(Tulis),
-
-  (member('m24', List_inv) -> atom_concat(own,'.',Temp2);
-   atom_concat(nope,'.',Temp2)),
-  write(Tulis,Temp2),nl(Tulis),
-
-  (member('akm', List_inv) -> atom_concat(own,'.',Temp3);
-   atom_concat(nope,'.',Temp3)),
-  write(Tulis,Temp3),nl(Tulis),
-
-  (member('p18c', List_inv) -> atom_concat(own,'.',Temp4);
-   atom_concat(nope,'.',Temp4)),
-  write(Tulis,Temp4),nl(Tulis),
-
-  (member('m1997', List_inv) -> atom_concat(own,'.',Temp5);
-   atom_concat(nope,'.',Temp5)),
-  write(Tulis,Temp5),nl(Tulis),
-
-  /*AMMO*/
-  /*ammo_obj(sniper_ammo).
-    ammo_obj(smg_ammo).
-    ammo_obj(ar_ammo).
-    ammo_obj(sg_ammo).
-    ammo_obj(pistol_ammo). */
-
-  (member('sniper_ammo', List_inv) -> atom_concat(own,'.',Temp6);
-   atom_concat(nope,'.',Temp6)),
-  write(Tulis,Temp6),nl(Tulis),
-
-  (member('smg_ammo', List_inv) -> atom_concat(own,'.',Temp7);
-   atom_concat(nope,'.',Temp7)),
-  write(Tulis,Temp7),nl(Tulis),
-
-  (member('ar_ammo', List_inv) -> atom_concat(own,'.',Temp8);
-   atom_concat(nope,'.',Temp8)),
-  write(Tulis,Temp8),nl(Tulis),
-
-  (member('sg_ammo', List_inv) -> atom_concat(own,'.',Temp9);
-   atom_concat(nope,'.',Temp9)),
-  write(Tulis,Temp9),nl(Tulis),
-
-  (member('pistol_ammo', List_inv) -> atom_concat(own,'.',Temp10);
-   atom_concat(nope,'.',Temp10)),
-  write(Tulis,Temp10),nl(Tulis),
-
-  /*ARMOR*/
-  /*armor_obj(helm_spetsnaz).
-    armor_obj(helm_military).
-    armor_obj(vest_military).
-    armor_obj(vest_police). */
-
-  (member('helm_spetsnaz', List_inv) -> atom_concat(own,'.',Temp11);
-   atom_concat(nope,'.',Temp11)),
-  write(Tulis,Temp11),nl(Tulis),
-
-  (member('helm_military', List_inv) -> atom_concat(own,'.',Temp12);
-   atom_concat(nope,'.',Temp12)),
-  write(Tulis,Temp12),nl(Tulis),
-
-  (member('vest_military', List_inv) -> atom_concat(own,'.',Temp13);
-   atom_concat(nope,'.',Temp13)),
-  write(Tulis,Temp13),nl(Tulis),
-
-  (member('vest_police', List_inv) -> atom_concat(own,'.',Temp14);
-   atom_concat(nope,'.',Temp14)),
-  write(Tulis,Temp14),nl(Tulis),
-
-  /*MEDICINE*/
-  /*med_obj(bandages).
-    med_obj(med_kit).
-    med_obj(first_aid_kit). */
-
-  (member('bandages', List_inv) -> atom_concat(own,'.',Temp15);
-   atom_concat(nope,'.',Temp15)),
-  write(Tulis,Temp15),nl(Tulis),
-
-  (member('med_kit', List_inv) -> atom_concat(own,'.',Temp16);
-   atom_concat(nope,'.',Temp16)),
-  write(Tulis,Temp16),nl(Tulis),
-
-  (member('first_aid_kit', List_inv) -> atom_concat(own,'.',Temp17);
-   atom_concat(nope,'.',Temp17)),
-  write(Tulis,Temp17),nl(Tulis),
-
-  weapon_pos(X1,Y1,W),
-  write(Tulis,X1),write(Tulis,'.'),nl(Tulis),
-  write(Tulis,Y1),write(Tulis,'.'),nl(Tulis),
-  write(Tulis,W),write(Tulis,'.'),nl(Tulis),
-
-  ammo_pos(X2,Y2,A),
-  write(Tulis,X2),write(Tulis,'.'),nl(Tulis),
-  write(Tulis,Y2),write(Tulis,'.'),nl(Tulis),
-  write(Tulis,A),write(Tulis,'.'),nl(Tulis),
-
-  armor_pos(X3,Y3,Ar),
-  write(Tulis,X3),write(Tulis,'.'),nl(Tulis),
-  write(Tulis,Y3),write(Tulis,'.'),nl(Tulis),
-  write(Tulis,Ar),write(Tulis,'.'),nl(Tulis),
-
-  med_pos(X4,Y4,M),
-  write(Tulis,X4),write(Tulis,'.'),nl(Tulis),
-  write(Tulis,Y4),write(Tulis,'.'),nl(Tulis),
-  write(Tulis,M),write(Tulis,'.'),nl(Tulis),
-
-  deadzone_size(Size),
-  write(Tulis,Size),write(Tulis,'.'),nl(Tulis),
-
-  deadzone_timer(Time),
-  write(Tulis,Time),write(Tulis,'.'),nl(Tulis),
-
-  enemy_pos(X5,Y5,E),
-  write(Tulis,X5),write(Tulis,'.'),nl(Tulis),
-  write(Tulis,Y5),write(Tulis,'.'),nl(Tulis),
-  write(Tulis,E),write(Tulis,'.'),nl(Tulis),
-
-  enemy_weapon(Jenis,Peluru),
-  write(Tulis,Jenis),write(Tulis,'.'),nl(Tulis),
-  write(Tulis,Peluru),write(Tulis,'.'),nl(Tulis),
-
-  enemy_health(Cond1,Cond2),
-  write(Tulis,Cond1),write(Tulis,'.'),nl(Tulis),
-  write(Tulis,Cond2),write(Tulis,'.'),nl(Tulis),
-
-  enemyList(List),
-  write(Tulis,List),write(Tulis,'.'),nl(Tulis),
-
-  close(Tulis),
-  write('Saved successfuly.'),nl.
-
-loadfile(X):-
-  open(X,read,Str),
-  /*lokasi*/
-  retract(player_pos(_,_)),
-  read(Str,Rekam1),
-  read(Str,Rekam2),
-  asserta(player_pos(Rekam1,Rekam2)),
-
-  /*health*/
-  retract(player_health(_)),
-  read(Str,Rekam3),
-  asserta(player_health(Rekam3)),
-
-  /*armor*/
-  retract(player_armor(_)),
-  read(Str,Rekam4),
-  asserta(player_armor(Rekam4)),
-
-  /*weapon*/
-  retract(player_weapon(_)),
-  read(Str,Rekam5),
-  asserta(player_weapon(Rekam5)),
-
-  /*ammo*/
-  retract(player_ammo(_)),
-  read(Str,Rekam6),
-  asserta(player_ammo(Rekam6)),
-
-  /*Inventory*/
-  retract(player_inv(_)),
-  asserta(player_inv([])),
-  player_inv(List),
-  read(Str,Rekam7),
-    (Rekam7 == own -> append(['awm'], List, New_List);append([], List, New_List)),
-  read(Str,Rekam8),
-    (Rekam8 == own -> append(['m24'], New_List, New_List2);append([], New_List, New_List2)),
-  read(Str,Rekam9),
-    (Rekam9 == own -> append(['akm'], New_List2, New_List3);append([], New_List2, New_List3)),
-  read(Str,Rekam10),
-    (Rekam10 == own -> append(['p18c'], New_List3, New_List4);append([], New_List3, New_List4)),
-  read(Str,Rekam11),
-    (Rekam11 == own -> append(['m1997'], New_List4, New_List5);append([], New_List4, New_List5)),
-  read(Str,Rekam12),
-    (Rekam12 == own -> append(['sniper_ammo'], New_List5, New_List6);append([], New_List5, New_List6)),
-  read(Str,Rekam13),
-    (Rekam13 == own -> append(['smg_ammo'], New_List6, New_List7);append([], New_List6, New_List7)),
-  read(Str,Rekam14),
-    (Rekam14 == own -> append(['ar_ammo'], New_List7, New_List8);append([], New_List7, New_List8)),
-  read(Str,Rekam15),
-    (Rekam15 == own -> append(['sg_ammo'], New_List8, New_List9);append([], New_List8, New_List9)),
-  read(Str,Rekam16),
-    (Rekam16 == own -> append(['pistol_ammo'], New_List9, New_List10);append([], New_List9, New_List10)),
-  read(Str,Rekam17),
-    (Rekam17 == own -> append(['helm_spetsnaz'], New_List10, New_List11);append([], New_List10, New_List11)),
-  read(Str,Rekam18),
-    (Rekam18 == own -> append(['helm_military'], New_List11, New_List12);append([], New_List11, New_List12)),
-  read(Str,Rekam19),
-    (Rekam19 == own -> append(['vest_military'], New_List12, New_List13);append([], New_List12, New_List13)),
-  read(Str,Rekam20),
-    (Rekam20 == own -> append(['vest_police'], New_List13, New_List14);append([], New_List13, New_List14)),
-  read(Str,Rekam21),
-    (Rekam21 == own -> append(['bandages'], New_List14, New_List15);append([], New_List14, New_List15)),
-  read(Str,Rekam22),
-    (Rekam22 == own -> append(['med_kit'], New_List15, New_List16);append([], New_List15, New_List16)),
-  read(Str,Rekam23),
-    (Rekam23 == own -> append(['first_aid_kit'], New_List16, New_List17);append([], New_List16, New_List17)),
-  retract(player_inv(_)),
-  asserta(player_inv(New_List17)),
-
-  /*WEAPON POS*/
-  retract(weapon_pos(_,_,_)),
-  read(Str,Rekam24),
-  read(Str,Rekam25),
-  read(Str,Rekam26),
-  asserta(weapon_pos(Rekam24,Rekam25,Rekam26)),
-
-  /*AMMO POS*/
-  retract(ammo_pos(_,_,_)),
-  read(Str,Rekam27),
-  read(Str,Rekam28),
-  read(Str,Rekam29),
-  asserta(ammo_pos(Rekam27,Rekam28,Rekam29)),
-
-  /*MEDICINE POS*/
-  retract(med_pos(_,_,_)),
-  read(Str,Rekam30),
-  read(Str,Rekam31),
-  read(Str,Rekam32),
-  asserta(med_pos(Rekam30,Rekam31,Rekam32)),
-
-  /*DEADZONE SIZE*/
-  retract(deadzone_size(_)),
-  read(Str,Rekam33),
-  asserta(deadzone_size(Rekam33)),
-
-  /*DEADZONE TIMER*/
-  retract(deadzone_timer(_)),
-  read(Str,Rekam34),
-  asserta(deadzone_timer(Rekam34)),
-
-  /*ENEMY POS*/
-  retract(enemy_pos(_,_,_)),
-  read(Str,Rekam35),
-  read(Str,Rekam36),
-  read(Str,Rekam37),
-  asserta(enemy_pos(Rekam35,Rekam36,Rekam37)),
-
-  /*WEAPON POS*/
-  retract(enemy_weapon(_,_)),
-  read(Str,Rekam38),
-  read(Str,Rekam39),
-  asserta(enemy_weapon(Rekam38,Rekam39)),
-
-  /*ENEMY HEALTH*/
-  retract(enemy_health(_,_)),
-  read(Str,Rekam40),
-  read(Str,Rekam41),
-  asserta(enemy_health(Rekam40,Rekam41)),
-
-  /*ENEMY LIST*/
-  retract(enemyList(_)),
-  read(Str,Rekam42),
-  asserta(enemyList(Rekam42)),
-
-  close(Str),
-  write('Load successfuly.'),nl.
